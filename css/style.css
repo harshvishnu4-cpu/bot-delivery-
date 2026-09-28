@@ -19,24 +19,12 @@ html,body{height:100%;margin:0;overflow:hidden;background:#6eb6fc;color:var(--te
 
 /* ---------- title ---------- */
 #title{position:absolute;inset:0;pointer-events:auto;overflow:visible;transition:opacity .8s ease, transform .8s ease}
-#title .bg{position:absolute;inset:calc(-20px - var(--by)) calc(-20px - var(--bx));background-size:cover;background-position:center;transform:scale(1.04);animation:drift 24s ease-in-out infinite alternate}
-@keyframes drift{to{transform:scale(1.1) translateX(-20px)}}
-#title .shade{position:absolute;inset:calc(-1*var(--by)) calc(-1*var(--bx));background:linear-gradient(90deg,rgba(24,49,83,.92) 0%,rgba(24,49,83,.78) 38%,rgba(24,49,83,.08) 68%,rgba(24,49,83,0) 100%)}
-#title .copy{position:absolute;left:150px;top:250px;width:860px;color:#fff}
-#title .kicker{display:inline-flex;align-items:center;gap:14px;font-size:26px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#ffd84a}
-#title .kicker i{display:block;width:44px;height:6px;border-radius:3px;background:#ffd84a}
-#title h1{margin:26px 0 0;font-size:132px;line-height:.94;font-weight:900;letter-spacing:-.02em;text-wrap:balance}
-#title h1 span{color:#ffd84a}
-#title p{margin:34px 0 0;font-size:34px;line-height:1.35;color:#d9e6f7;max-width:640px}
-#startBtn{margin-top:60px;display:inline-flex;align-items:center;gap:22px;padding:30px 56px 30px 40px;border-radius:999px;
+#title .bg{position:absolute;inset:calc(-1*var(--by)) calc(-1*var(--bx));background-size:cover;background-position:center}
+#startBtn{position:absolute;left:200px;bottom:82px;display:inline-flex;align-items:center;gap:22px;padding:30px 56px 30px 40px;border-radius:999px;
   background:#ffd84a!important;color:var(--navy)!important;font-size:40px;font-weight:900;box-shadow:0 14px 0 #c9a51f,0 26px 50px rgba(0,0,0,.35);transition:transform .15s}
 #startBtn:hover{transform:translateY(-3px)}
 #startBtn:active{transform:translateY(8px);box-shadow:0 6px 0 #c9a51f,0 14px 30px rgba(0,0,0,.3)}
 #startBtn svg{width:54px;height:54px}
-#title .bot{position:absolute;right:230px;bottom:40px;height:900px;filter:drop-shadow(0 40px 40px rgba(0,0,0,.35));animation:ride 1.2s ease-in-out infinite alternate}
-@keyframes ride{to{transform:translateY(-10px) rotate(.6deg)}}
-#title .road-tag{position:absolute;left:150px;bottom:70px;display:flex;gap:18px;color:#bcd0ea;font-size:24px;font-weight:700}
-#title .road-tag b{display:inline-block;width:60px;height:10px;border-radius:5px;background:#fff;opacity:.9;margin-top:12px}
 
 /* ---------- captions ---------- */
 #cap{position:absolute;left:720px;right:150px;bottom:34px;display:flex;justify-content:center;transition:opacity .35s, transform .35s;z-index:3}
@@ -232,14 +220,6 @@ html,body{height:100%;margin:0;overflow:hidden;background:#6eb6fc;color:var(--te
 #hint .hint{box-shadow:0 14px 34px rgba(24,49,83,.25)}
 
 .tray.gone{display:none}
-
-/* ---------- title: story link ---------- */
-#title .title-btns{display:flex;flex-wrap:nowrap;align-items:center;gap:22px;margin-top:52px}
-#title .copy{top:190px!important;width:980px!important}
-#title .title-btns #startBtn{margin-top:0}
-#storyBtn{display:flex;align-items:center;gap:12px;white-space:nowrap;padding:14px 26px 14px 16px;border-radius:999px;background:rgba(24,49,83,.55)!important;color:#fff!important;font-size:24px;font-weight:800;border:2px solid rgba(255,255,255,.35)!important}
-#storyBtn svg{width:34px;height:34px;color:#ffd84a}
-#storyBtn:hover{background:rgba(255,255,255,.22)!important}
 
 /* ---------- story hook video ---------- */
 .hook{position:fixed;inset:0;z-index:90;background:#0b1a2e;font-family:var(--font);color:#fff;overflow:hidden}

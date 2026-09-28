@@ -777,10 +777,9 @@ addEventListener('keydown', e=>{ if(state==='TITLE' || HookVideo.open) return; c
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden && state!=='TITLE' && !paused && !HookVideo.open) setPause(true); });
 
 /* ---------- title ---------- */
-$('#titleBg').style.backgroundImage = `url(${ASSET.city})`; $('#titleBot').src = ASSET.zippyImg; $('#doneBot').src = ASSET.zippyImg;
+$('#titleBg').style.backgroundImage = `url(${ASSET.titleThumbnail})`; $('#doneBot').src = ASSET.zippyImg;
 W.cam.mode = 'title'; W.placeZippy(0);
 const savedProgress = loadProgress();
-if(savedProgress){ $('#startBtn').lastChild.textContent = savedProgress.state==='COMPLETE' ? 'View Results' : 'Resume Mission'; }
 function resumeProgress(saved){
   const s = saved && saved.state;
   if(!s || s==='INTRO') return launch(INTRO);
@@ -811,10 +810,9 @@ async function startGame(withStory){
   else { FX.titleOut($('#title'), ()=>{ $('#title').style.display='none'; }); }
   beginMission();
 }
-// new players see the story first; returning players can still open it from the title
+// New players see the story after pressing Start Mission.
 const isFresh = !savedProgress || savedProgress.state==='INTRO';
 $('#startBtn').addEventListener('click', ()=>startGame(isFresh));
-$('#storyBtn').addEventListener('click', ()=>startGame(true));
 setTimeout(()=>$('#startBtn').focus({preventScroll:true}), 100);
 syncCtl(); renderProg('PREDICTION');
 

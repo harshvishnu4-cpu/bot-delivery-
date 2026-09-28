@@ -4,7 +4,7 @@ const ASSET = {
   backdrop: window.TEXTURES.backdrop,     // WebGL texture (embedded)
   rider: window.TEXTURES.rider,           // oncoming scooter rider, WebGL texture (embedded)
   zippyImg: 'assets/images/zippy.webp',        // plain <img> uses
-  city: 'assets/images/city.webp',             // title screen background
+  titleThumbnail: 'assets/thumbnails/delivery-bot-academy-thumbnail.png',
   hookVideo: 'assets/video/hook-video.mp4',
   zippyAspect: 0.49390,
   riderAspect: 0.52031
@@ -376,4 +376,3 @@ W.frame = (dt, rawDt, mirror)=>{
 };
 W.resize = (w,h)=>{ renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); };
 })();
-
