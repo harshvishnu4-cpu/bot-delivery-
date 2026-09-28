@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Delivery Bot Academy</title>
+  <meta name="description" content="A 3D delivery mission where learners design IF/AND/OR/THEN/ELSE rules so Zippy can carry hot biryani to Mrs. Sharma's house.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="stage">
+  <div id="mirror" class="hide"><span>Rear view</span></div>
+  <div id="hud" class="hide"></div>
+  <div id="bubble" class="hide"></div>
+  <div id="toast" class="hide"></div>
+  <div id="panel" class="out"></div>
+  <div id="cta" class="hide"></div>
+  <div id="cap" class="empty"><div class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg><span id="capText"></span></div></div>
+  <!-- SKAI HUD (Figma "Robotics" frames): laid out in design px (1959x1102), scaled onto the stage -->
+  <div id="skai" class="hide">
+    <img class="sk" src="assets/skai/line-hex.svg" alt="" style="left:1477.2px;top:38.7px">
+    <img class="sk" src="assets/skai/line-top.svg" alt="" style="left:230px;top:28px">
+    <i class="sk sk-link" style="left:1693px;top:63px"></i>
+    <button class="sk-btn" id="skInfo" style="left:1619px;top:19px;width:92.156px;height:95.888px" aria-label="Menu" title="Menu"><img src="assets/skai/hex.svg" alt=""><span class="sk-i">i</span></button>
+    <div class="sk-box" id="skTimer" style="left:1723px;top:34px;width:208.496px;height:66.242px" role="timer" aria-label="Mission time"><img src="assets/skai/timer-plate.svg" alt=""><span class="sk-time" id="skTime">00:00</span></div>
+    <img class="sk" src="assets/skai/plate-left.svg" alt="" style="left:-18px;top:1px">
+    <img class="sk" src="assets/skai/logo-mark.svg" alt="SKAI" style="left:130.1px;top:27px">
+    <img class="sk" src="assets/skai/logo-text.svg" alt="" style="left:190.2px;top:34.7px">
+    <div class="sk-box" id="skMeter" style="left:1870px;top:249px;width:83px;height:634.511px" role="img" aria-label="Progress">
+      <img src="assets/skai/meter-body.svg" alt="">
+      <i class="sk-seg" style="top:112px"></i><i class="sk-seg" style="top:168.23px"></i><i class="sk-seg" style="top:224.46px"></i><i class="sk-seg" style="top:280.69px"></i><i class="sk-seg" style="top:336.92px"></i><i class="sk-seg" style="top:393.16px"></i><i class="sk-seg" style="top:449.39px"></i><i class="sk-seg" style="top:505.62px"></i><i class="sk-seg" style="top:561.85px"></i>
+      <img src="assets/skai/meter-cap.svg" alt="" style="left:20.55px;top:-0.24px">
+    </div>
+    <button class="sk-btn" id="skExit" style="left:7px;top:20px;width:113.642px;height:90.372px" aria-label="Exit to title" title="Exit to title"><img src="assets/skai/btn-round.svg" alt=""><img src="assets/skai/icon-quit.svg" alt="" style="left:32.8px;top:28.3px;transform:rotate(180deg)"></button>
+    <button class="sk-btn" id="skHint" style="left:23px;top:992px;width:113.642px;height:90.372px" aria-label="Show a hint" title="Hint" disabled><img src="assets/skai/btn-round.svg" alt=""><img src="assets/skai/bulb-body.svg" alt="" style="left:43.17px;top:32.04px"><img src="assets/skai/bulb-rays.svg" alt="" style="left:31.69px;top:20.59px"></button>
+    <button class="sk-btn" id="skSound" style="left:1525px;top:19px;width:92.156px;height:95.888px" aria-label="Sound options" title="Sound" aria-haspopup="true" aria-expanded="false"><img src="assets/skai/hex.svg" alt=""><img src="assets/skai/icon-speaker.svg" alt="" style="left:27px;top:32px"></button>
+    <div id="skMenu" class="hide">
+      <img src="assets/skai/menu-panel.svg" alt="">
+      <button class="sk-row" id="skReplay" style="top:18px"><img src="assets/skai/icon-replay.svg" alt="" style="left:15px;top:17.3px"><span>Replay<br>Narration</span></button>
+      <button class="sk-row" id="skMute" style="top:108px"><img src="assets/skai/icon-mute-ring.svg" alt="" style="left:15px;top:17.1px"><img src="assets/skai/icon-mute-speaker.svg" alt="" style="left:27px;top:31.6px"><span>Mute All<br>Sounds</span></button>
+    </div>
+  </div>
+  <div id="done" class="hide"><canvas id="confetti" width="1920" height="1080"></canvas>
+    <div class="card">
+      <div class="lic"><div class="stamp">HOT &amp;<br>ON<br>TIME</div><img id="doneBot" alt="Zippy"><div class="nm">Zippy</div><div class="id">DELIVERY LICENCE · DB-0626</div></div>
+      <div>
+        <h2>Biryani delivered!</h2>
+        <div class="sub">Your rules got Zippy past water, road blocks and turns, all the way to Mrs. Sharma's door.</div>
+        <div class="skills" id="skills"></div>
+        <div class="btnrow"><button class="go blue" id="againBtn"></button></div>
+      </div>
+    </div>
+  </div>
+  <div id="title">
+    <div class="bg" id="titleBg"></div>
+    <div class="shade"></div>
+    <div class="copy">
+      <div class="kicker"><i></i>Biryani delivery</div>
+      <h1>Delivery Bot <span>Academy</span></h1>
+      <p>Zippy only knows how to drive straight. Design the rules that get hot biryani safely to Mrs. Sharma's house, three streets away.</p>
+      <div class="title-btns"><button id="startBtn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#183153"/><path d="M10 7.5l6 4.5-6 4.5z" fill="#ffd84a"/></svg>Start Mission</button>
+      <button id="storyBtn" class="story-link"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor"/></svg>Watch Zippy's story</button></div>
+    </div>
+    <img class="bot" id="titleBot" alt="Zippy the delivery robot">
+  </div>
+  <div id="pause" class="hide">
+    <div class="card">
+      <h3><svg viewBox="0 0 24 24" fill="#183153"><rect x="5" y="4" width="5" height="16" rx="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.5"/></svg>Paused</h3>
+      <button class="go wide" id="pResume"></button>
+      <button class="prow" id="pRestart"></button>
+      <button class="prow" id="pStory"></button>
+      <button class="prow" id="pCap"></button>
+      <button class="prow" id="pMute"></button>
+    </div>
+  </div>
+  <div id="flash"></div>
+  <div id="ghost"></div>
+</div>
+
+<!-- Story hook video (plays before the mission) -->
+<div id="hook" class="hook" hidden>
+  <video id="hookVideo" playsinline preload="auto" src="assets/video/hook-video.mp4"></video>
+  <div class="hook-top"><span class="hook-tag"><i></i>Zippy's story</span><button id="hookMute" class="hook-ic" aria-label="Turn sound off"></button></div>
+  <button id="hookSkip" class="hook-skip">Skip story<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l8 7-8 7zM14 5l8 7-8 7z" fill="currentColor"/></svg></button>
+  <div class="hook-bar"><i id="hookProg"></i></div>
+  <button id="hookPlay" class="hook-play" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5l13 7.5-13 7.5z" fill="currentColor"/></svg>Play the story</button>
+  <div id="hookEnd" class="hook-endwrap" hidden><div class="hook-end">
+    <h2>Mrs. Sharma is waiting!</h2>
+    <p>Zippy only knows how to drive straight. Can you teach it the rules of the road?</p>
+    <div class="hook-btns"><button id="hookGo" class="hook-go"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#183153"/><path d="M10 7.5l6 4.5-6 4.5z" fill="#ffd84a"/></svg>Let's help Zippy!</button>
+    <button id="hookAgain" class="hook-again">Watch again</button></div>
+  </div></div>
+</div>
+<div id="rotate"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg><p>Turn your device sideways to play</p></div></div>
+
+<!-- Libraries -->
+<script src="js/lib/three.min.js"></script>
+<script src="js/lib/gsap.min.js"></script>
+<!-- Game -->
+<script src="js/textures.js"></script>
+<script src="js/world.js"></script>
+<script src="js/hook-video.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

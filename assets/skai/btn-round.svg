@@ -1,0 +1,14 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="113.642" height="90.3725" viewBox="0 0 113.642 90.3725" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Group 1171279123">
+<rect id="Rectangle 177" y="30.8509" width="12.9877" height="28.1399" rx="6.49383" fill="white"/>
+<rect id="Rectangle 178" x="100.655" y="30.8509" width="12.9877" height="28.1399" rx="6.49383" fill="white"/>
+<path id="Ellipse 23" d="M56.8064 0.585938C75.0951 1.13067 87.5051 6.60427 95.3503 15.2285C103.202 23.8602 106.562 35.7366 106.562 49.2451C106.562 62.6844 101.624 72.7871 92.988 79.5459C84.3315 86.3208 71.8936 89.7871 56.821 89.7871C43.2655 89.7871 31.0975 87.6252 22.196 81.502C13.4713 75.5002 7.79505 65.6285 7.10814 49.9756L7.07982 49.2256C7.08422 33.1421 12.5772 21.0034 21.4997 12.8799C30.431 4.74851 42.8554 0.588842 56.8064 0.585938Z" fill="white" stroke="url(#paint0_linear_0_64)" stroke-width="1.17157"/>
+<path id="Ellipse 26" d="M97.4664 48.7108C97.4664 70.5337 81.0922 81.7114 56.3095 81.7114C34.0681 81.7114 16.0379 74.7639 15.1527 48.7108C15.1528 22.6577 33.2972 9.19695 56.3095 9.19695C86.4028 10.0756 97.4664 26.8879 97.4664 48.7108Z" fill="#CA1C96"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_64" x1="57.4067" y1="54.6289" x2="57.4067" y2="-39.6823" gradientUnits="userSpaceOnUse">
+<stop stop-color="#0A2D94"/>
+<stop offset="1" stop-color="#666666" stop-opacity="0"/>
+</linearGradient>
+</defs>
+</svg>
