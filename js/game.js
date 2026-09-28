@@ -164,7 +164,7 @@ function clickOnce(btn){ let hit=false; const h=()=>{ hit=true; }; btn.addEventL
 
 /* ---------- speech ---------- */
 const SP = { voice:null, cur:null, done:true, last:'', captions:true, token:0, gen:0, audio:null };
-// voiceover clips (ElevenLabs voice "Bittu"): assets/audio/vo/<key>.mp3, or <key>_<n>.mp3 for multi-box lines.
+// voiceover clips (ElevenLabs voice "Chutki", id Jr72SE8p9OcJmr8hyX0D): assets/audio/vo/<key>.mp3, or <key>_<n>.mp3 for multi-box lines.
 // If you edit a line in L, regenerate its clip too, or the caption and the voice won't match.
 const VO = new Map(); for(const [k,v] of Object.entries(L)) [].concat(v).forEach((t,i,a)=>VO.set(t, `assets/audio/vo/${a.length>1 ? k+'_'+(i+1) : k}.mp3`));
 function stopAudio(){ const a=SP.audio; if(a){ a.onended=a.onerror=null; a.pause(); SP.audio=null; } }
