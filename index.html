@@ -14,6 +14,7 @@
   <div id="hud" class="hide"></div>
   <div id="bubble" class="hide"></div>
   <div id="toast" class="hide"></div>
+  <div id="dim"></div>
   <div id="panel" class="out"></div>
   <div id="cta" class="hide"></div>
   <div id="cap" class="empty"><div class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg><span id="capText"></span></div></div>
@@ -22,7 +23,7 @@
     <img class="sk" src="assets/skai/line-hex.svg" alt="" style="left:1477.2px;top:38.7px">
     <img class="sk" src="assets/skai/line-top.svg" alt="" style="left:230px;top:28px">
     <i class="sk sk-link" style="left:1693px;top:63px"></i>
-    <button class="sk-btn" id="skInfo" style="left:1619px;top:19px;width:92.156px;height:95.888px" aria-label="Menu" title="Menu"><img src="assets/skai/hex.svg" alt=""><span class="sk-i">i</span></button>
+    <button class="sk-btn" id="skInfo" style="left:1619px;top:19px;width:92.156px;height:95.888px" aria-label="Mission info" title="Mission info" aria-haspopup="dialog" aria-expanded="false" aria-controls="skInfoPanel"><img src="assets/skai/hex.svg" alt=""><span class="sk-i">i</span></button>
     <div class="sk-box" id="skTimer" style="left:1723px;top:34px;width:208.496px;height:66.242px" role="timer" aria-label="Mission time"><img src="assets/skai/timer-plate.svg" alt=""><span class="sk-time" id="skTime">00:00</span></div>
     <img class="sk" src="assets/skai/plate-left.svg" alt="" style="left:-18px;top:1px">
     <img class="sk" src="assets/skai/logo-mark.svg" alt="SKAI" style="left:130.1px;top:27px">
@@ -39,6 +40,29 @@
       <img src="assets/skai/menu-panel.svg" alt="">
       <button class="sk-row" id="skReplay" style="top:18px"><img src="assets/skai/icon-replay.svg" alt="" style="left:15px;top:17.3px"><span>Replay<br>Narration</span></button>
       <button class="sk-row" id="skMute" style="top:108px"><img src="assets/skai/icon-mute-ring.svg" alt="" style="left:15px;top:17.1px"><img src="assets/skai/icon-mute-speaker.svg" alt="" style="left:27px;top:31.6px"><span>Mute All<br>Sounds</span></button>
+    </div>
+    <!-- Mission info (i button): SKAI plate like the sound menu, game information only -->
+    <div id="skInfoPanel" class="hide" role="dialog" aria-modal="false" aria-labelledby="ipTitle">
+      <i class="ip-dia"></i>
+      <button class="ip-x" id="ipClose" aria-label="Close mission info"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></button>
+      <h3 id="ipTitle">Mission info</h3>
+      <p class="ip-goal">Help Zippy take hot biryani to Mrs. Sharma's house. Zippy only drives straight, so you design its rules.</p>
+      <div class="ip-now"><span class="ip-step" id="ipStep"></span><span id="ipNow"></span></div>
+      <div class="ip-sec">How rules work</div>
+      <ul class="ip-list">
+        <li><b>IF</b><span>checks what Zippy sees on the road.</span></li>
+        <li><b>THEN</b><span>is what Zippy does when it is true.</span></li>
+        <li><b>ELSE</b><span>is what Zippy does when it is not true.</span></li>
+        <li><b>AND</b><span>both conditions must be true.</span></li>
+        <li><b>OR</b><span>one or both conditions is enough.</span></li>
+        <li><b>1 · 2 · 3</b><span>rules are checked top to bottom. The first true rule wins.</span></li>
+      </ul>
+      <div class="ip-sec">How to play</div>
+      <ul class="ip-list ip-play">
+        <li><b>Drag</b><span>or tap a tile to put it in a space.</span></li>
+        <li><b>Run</b><span>to test your rules on the road.</span></li>
+        <li><b>Hint</b><span>the bulb button gives a clue when you're stuck.</span></li>
+      </ul>
     </div>
   </div>
   <div id="done" class="hide"><canvas id="confetti" width="1920" height="1080"></canvas>
@@ -68,6 +92,7 @@
   </div>
   <div id="flash"></div>
   <div id="ghost"></div>
+  <div id="demo" aria-hidden="true"><div class="chipc"></div><svg class="hand" viewBox="0 0 64 64"><path d="M24 30V10a5 5 0 0 1 10 0v16l2-1a5 5 0 0 1 6 2l1-.5a5 5 0 0 1 6 2.5l1 .2a5 5 0 0 1 6 4.8V46c0 9-7 16-16 16h-4c-6 0-11-3-14-8L12 40a5 5 0 0 1 8-6z" fill="#fff" stroke="#183153" stroke-width="3.5" stroke-linejoin="round"/></svg></div>
   <div id="nudge" aria-hidden="true"><svg viewBox="0 0 64 60"><path d="M4 30L30 6v14h28v20H30v14z" fill="#e41ea5" stroke="#fff" stroke-width="4" stroke-linejoin="round"/></svg></div>
 </div>
 

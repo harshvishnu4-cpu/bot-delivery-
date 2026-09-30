@@ -92,6 +92,14 @@ const L = {
   predGo: "You guessed it would keep going. That's what happened!",
   predBack: "You guessed turn back. Its steps only said forward.",
   fix3: "Straight-only steps won't work. Let's teach Zippy smart rules!",
+  tut1: ["This street is empty. Let's make Zippy's very first rule!", "Watch the hand. It drags a tile into a space."],
+  tutIf: "Now you! Drag 'Nothing ahead' into the IF space.",
+  tutThen: "Great! Now drag GO into the THEN space.",
+  tutTap: "Tip: you can also tap a tile to place it.",
+  tutRun: "Your first rule is ready. Press Run!",
+  tutOk: "You made your first rule! IF nothing ahead, THEN go.",
+  tutH1: "Drag the 'Nothing ahead' tile into the IF space.",
+  tutH2: "Drag the GO tile into the THEN space.",
   mTeach: "I'll show you how. Follow the arrow.",
   mTry: "Now you try. I'll give small nudges.",
   mSelf: "Your turn! Do this one on your own.",
@@ -189,8 +197,8 @@ function clickOnce(btn){ let hit=false; const h=()=>{ hit=true; }; btn.addEventL
 
 /* ---------- speech ---------- */
 const SP = { voice:null, cur:null, done:true, last:'', captions:true, token:0, gen:0, audio:null };
-// voiceover clips (ElevenLabs voice "Chutki", id Jr72SE8p9OcJmr8hyX0D): assets/audio/vo/<key>.mp3, or <key>_<n>.mp3 for multi-box lines.
-// If you edit a line in L, regenerate its clip too, or the caption and the voice won't match.
+// voiceover clips (ElevenLabs voice id IJcDvoySqim22F7eo0y8, model eleven_multilingual_v2, Indian English): assets/audio/vo/<key>.mp3, or <key>_<n>.mp3 for multi-box lines.
+// If you edit a line in L, regenerate its clip too (python3 tools/generate_vo.py <key>), or the caption and the voice won't match.
 const VO = new Map(); for(const [k,v] of Object.entries(L)) [].concat(v).forEach((t,i,a)=>VO.set(t, `assets/audio/vo/${a.length>1 ? k+'_'+(i+1) : k}.mp3`));
 const VOICE_EL = new Audio(); VOICE_EL.preload = 'auto';
 function stopAudio(){ const a=SP.audio; if(a){ a.onended=a.onerror=null; a.pause(); SP.audio=null; } }
@@ -209,10 +217,12 @@ function sayOne(text, last){
   const src = VO.get(text);
   if(src){ // recorded voice; muted clips still play silently so the caption keeps the same timing
     const a = VOICE_EL; a.src = src; a.muted = A.muted; SP.audio = a; spoke = true;
-    a.onended = ()=>{ if(tok===SP.token) ended = true; }; a.onerror = ()=>{ if(tok===SP.token) spoke = false; }; // missing file: fall back to timing
-    const p = a.play(); if(p && p.catch) p.catch(err=>{ if(tok===SP.token && !(err && err.name==='AbortError')) spoke = false; }); if(paused) a.pause(); }
-  else try{ if(window.speechSynthesis && !A.muted && speechSynthesis.getVoices().length){ const u = new SpeechSynthesisUtterance(text); if(SP.voice) u.voice = SP.voice; u.lang = 'en-IN'; u.rate = 0.98; u.pitch = 1.05;
-        u.onend = ()=>{ if(tok===SP.token) ended = true; }; u.onerror = ()=>{ if(tok===SP.token) ended = true; }; speechSynthesis.speak(u); spoke = true; } }catch(e){}
+    let fellBack = false; const noClip = ()=>{ if(tok!==SP.token || fellBack) return; fellBack = true; spoke = false; tts(); }; // missing file: browser voice (or caption timing)
+    a.onended = ()=>{ if(tok===SP.token) ended = true; }; a.onerror = noClip;
+    const p = a.play(); if(p && p.catch) p.catch(err=>{ if(!(err && err.name==='AbortError')) noClip(); }); if(paused) a.pause(); }
+  else tts();
+  function tts(){ try{ if(window.speechSynthesis && !A.muted && speechSynthesis.getVoices().length){ const u = new SpeechSynthesisUtterance(text); if(SP.voice) u.voice = SP.voice; u.lang = 'en-IN'; u.rate = 0.98; u.pitch = 1.05;
+        u.onend = ()=>{ if(tok===SP.token) ended = true; }; u.onerror = ()=>{ if(tok===SP.token) ended = true; }; speechSynthesis.speak(u); spoke = true; } }catch(e){} }
   const hardEnd = gt + words*0.62 + 3;
   talkLock(true);
   return until(()=> tok!==SP.token || (spoke ? (ended || gt>=hardEnd) : gt>=minEnd)).then(()=>{ if(tok===SP.token){ SP.done = true; if(last) talkLock(false); } });
@@ -220,7 +230,7 @@ function sayOne(text, last){
 function stopSpeech(){ SP.token++; SP.gen++; stopAudio(); try{ speechSynthesis.cancel(); }catch(e){} talkLock(false); }
 // while Zippy is speaking, the panel, CTA and results card can't be used; they unlock when the line ends
 function talkLock(on){ for(const s of ['#panel','#cta','#done']){ const e=$(s); if(e) e.inert=on; } stage.classList.toggle('talking', on);
-  if(!on){ const b=$('#ctaBtn'); if(b && !$('#cta').classList.contains('hide')) b.focus({preventScroll:true}); } }
+  if(!on){ const b=$('#ctaBtn') || $('#run:not([disabled])'); if(b && !$('#cta').classList.contains('hide')) b.focus({preventScroll:true}); } }
 function showCaption(t){ $('#capText').textContent = t; $('#cap').classList.toggle('empty', !t); }
 function clearCaption(){ $('#cap').classList.add('empty'); }
 
@@ -234,8 +244,18 @@ const FX = window.gsap ? {
 
 /* ---------- ui helpers ---------- */
 const panel = $('#panel');
-function setPanel(html){ nudgeStop(); panel.innerHTML = html; panel.classList.remove('out'); W.cam.shiftTarget = 0.16; }
-function hidePanel(){ nudgeStop(); panel.classList.add('out'); W.cam.shiftTarget = 0; }
+// run: label of the Run button, shown as the SKAI CTA capsule at the bottom (not inside the panel); omit it for a panel without one
+function setPanel(html, run){ nudgeStop(); panel.innerHTML = html; panel.classList.remove('out', 'center', 'wide'); stage.classList.remove('editing'); W.cam.shiftTarget = 0.16; if(run) showRun(run); else if($('#run')) hideCta(); }
+function hidePanel(){ nudgeStop(); panel.classList.remove('center', 'wide'); stage.classList.remove('editing'); panel.classList.add('out'); W.cam.shiftTarget = 0; if($('#run')) hideCta(); }
+// while the player edits rules the panel moves to the centre of the screen (scene dimmed behind); on Run it slides back left so the drive is visible
+const PANEL_W = 650, PANEL_TOP = 124, PANEL_ROOM = 785; // design px: panel width, its top, and the height free above the Run capsule
+// a panel with tiles goes wide while centred (rules on the left, tiles on the right), so it is shorter and can be shown bigger
+const PANEL_WIDE = 1080, PANEL_MAX = 1.08;
+function panelCenter(on){
+  const wide = on && !!panel.querySelector('.tray:not(.gone)'); panel.classList.toggle('wide', wide);
+  if(on){ const pw = wide ? PANEL_WIDE : PANEL_W, h = panel.offsetHeight, s = Math.min(PANEL_MAX, PANEL_ROOM/h, 1700/pw);
+    panel.style.setProperty('--pc-x', ((1920 - pw*s)/2 - 40)+'px'); panel.style.setProperty('--pc-y', Math.max(0, (PANEL_ROOM - h*s)/2)+'px'); panel.style.setProperty('--pc-s', s); }
+  panel.classList.toggle('center', on); stage.classList.toggle('editing', on); W.cam.shiftTarget = on ? 0 : 0.16; }
 function head(icon, title, sub){ return `<div class="ph-head"><div class="ic">${IC[icon]}</div><div><h2>${title}</h2>${sub?`<small>${sub}</small>`:''}</div></div>`; }
 function toast(kind, text){ const col = kind==='ok'?'#2FA66A':kind==='warn'?'#F2A93B':'#E76D5B'; const ic = kind==='ok'?IC.check:kind==='warn'?IC.horn:IC.alert;
   $('#toast').innerHTML = `<div class="t"><div class="ci" style="background:${col}">${ic}</div>${text}</div>`; $('#toast').classList.remove('hide'); FX.pop('#toast .t'); bubble(null); }
@@ -249,11 +269,21 @@ function hud(st){ const el=$('#hud'); if(!st){ el.classList.add('hide'); return;
   el.innerHTML = `<div class="s eye"><span class="ci">${IC.eye}</span>Zippy sees</div>` + items.map(([i,t])=>`<div class="s"><span class="ci">${IC[i]}</span>${t}</div>`).join(''); el.classList.remove('hide'); }
 // the plate is one SVG; the caps and the plate are clipped copies of it so they can open like a capsule
 const CTA_TEXT_MAX = 360; // px of text that fits on the pink plate between the white end caps
-function cta(label){ const el=$('#cta'), F='assets/skai/cta-frame.svg';
-  el.innerHTML = `<button class="sk-cta" id="ctaBtn"><span class="sk-cta-in"><img class="plate" src="${F}" alt=""><span class="lbl"><span class="t">${label}</span></span>
-    <span class="capL"><img src="${F}" alt=""><img src="assets/skai/cta-bracket.svg" alt="" style="left:-0.3px;top:50.5px"></span><span class="capR"><img src="${F}" alt=""></span><img class="stripes" src="assets/skai/cta-stripes.svg" alt="" style="left:48px;top:19.1px"></span></button>`;
-  el.classList.remove('hide'); stage.classList.add('cta-on'); const b=$('#ctaBtn'), lbl=b.querySelector('.lbl'); const fit=()=>{ lbl.style.fontSize=''; const w=lbl.firstElementChild.offsetWidth; if(w>CTA_TEXT_MAX) lbl.style.fontSize=(43.43*CTA_TEXT_MAX/w)+'px'; }; // measure the text itself, not its box fit(); document.fonts && document.fonts.ready.then(fit);
-  openCta(b); setTimeout(()=>b.focus({preventScroll:true}),50); return clickOnce(b).then(()=>{ SFX.tap(); hideCta(); b.id=''; b.disabled=true; }); }
+function ctaHTML(id, label){ const F='assets/skai/cta-frame.svg';
+  return `<button class="sk-cta" id="${id}"><span class="sk-cta-in"><img class="plate" src="${F}" alt=""><span class="lbl"><span class="t">${label}</span></span>
+    <span class="capL"><img src="${F}" alt=""><img src="assets/skai/cta-bracket.svg" alt="" style="left:-0.3px;top:50.5px"></span><span class="capR"><img src="${F}" alt=""></span><img class="stripes" src="assets/skai/cta-stripes.svg" alt="" style="left:48px;top:19.1px"></span></button>`; }
+function fitCta(b){ const lbl=b.querySelector('.lbl'); const fit=()=>{ lbl.style.fontSize=''; const w=lbl.firstElementChild.offsetWidth; if(w>CTA_TEXT_MAX) lbl.style.fontSize=(43.43*CTA_TEXT_MAX/w)+'px'; }; // measure the text itself, not its box
+  fit(); document.fonts && document.fonts.ready.then(fit); }
+// a CTA (or Run) waits, hidden, until Zippy has finished talking, then opens; a new line starting in a short grace gap keeps it waiting
+async function revealWhenQuiet(b){ const el=$('#cta'), talking=()=>stage.classList.contains('talking'), v=el.dataset.v;
+  while(true){ await until(()=>!talking()); await wait(0.3); if(!talking()) break; }
+  if(!b.isConnected || el.dataset.v!==v) return; el.classList.remove('hide'); stage.classList.add('cta-on'); fitCta(b); openCta(b); setTimeout(()=>b.focus({preventScroll:true}),50); }
+function cta(label){ const el=$('#cta');
+  el.innerHTML = ctaHTML('ctaBtn', label); el.classList.add('hide'); stage.classList.remove('cta-on'); const b=$('#ctaBtn');
+  revealWhenQuiet(b).catch(()=>{}); return clickOnce(b).then(()=>{ SFX.tap(); hideCta(); b.id=''; b.disabled=true; }); }
+// the Run button: same capsule and place as the CTA; it fades away while Zippy drives (disabled) and comes back for the next try
+function showRun(label){ const el=$('#cta'); el.innerHTML = ctaHTML('run', label); el.classList.add('hide'); stage.classList.remove('cta-on'); revealWhenQuiet($('#run')).catch(()=>{}); }
+function runLabel(label){ const b=$('#run'); if(!b) return; b.querySelector('.lbl .t').textContent = label; fitCta(b); }
 // capsule open: closed pill pops in, caps slide apart while the plate widens from the centre, then the label
 function openCta(b){ const q=s=>b.querySelector(s), inn=q('.sk-cta-in'), done=()=>inn.classList.add('pulse');
   if(!window.gsap || matchMedia('(prefers-reduced-motion: reduce)').matches){ done(); return; }
@@ -264,8 +294,8 @@ function openCta(b){ const q=s=>b.querySelector(s), inn=q('.sk-cta-in'), done=()
     .fromTo(q('.capR'), {x:-195}, {x:0, ...open}, .24)
     .fromTo(q('.plate'), {clipPath:'inset(0% 50% 0% 50%)'}, {clipPath:'inset(0% 0% 0% 0%)', ...open}, .24)
     .fromTo([q('.stripes'), q('.lbl')], {opacity:0, y:10}, {opacity:1, y:0, duration:.3, stagger:.06, ease:'power2.out', clearProps:'transform'}, .64); }
-function hideCta(){ $('#cta').classList.add('hide'); stage.classList.remove('cta-on'); }
-async function flash(){ const f=$('#flash'); f.classList.add('on'); SFX.whoosh(); await wait(0.28); return ()=>f.classList.remove('on'); }
+function hideCta(){ const el=$('#cta'); el.dataset.v = (+(el.dataset.v||0))+1; el.classList.add('hide'); stage.classList.remove('cta-on'); }
+async function flash(){ const f=$('#flash'); f.classList.add('on'); SFX.whoosh(); await wait(0.38); return ()=>f.classList.remove('on'); } // resolves once the fade has covered the screen
 
 /* ---------- hints (after 12 s idle) ---------- */
 const H = { list:null, idx:0, last:0, el:null, prev:null, force:false };
@@ -275,11 +305,11 @@ function syncHint(){ $('#skHint').disabled = !(H.list && H.idx < H.list.length);
 function poke(){ H.last = gt; }
 ['pointerdown','keydown'].forEach(ev=>addEventListener(ev, poke, true));
 function hintTick(){ if(!H.list || paused) return; if(!SP.done && !H.force){ H.last = gt; return; } // never cut into narration; idle time counts from when it ends
-  if((H.force || gt - H.last >= 12) && H.idx < H.list.length){ H.force = false; const t=H.list[H.idx++]; H.last=gt; syncHint(); if(H.el){ H.el.innerHTML = `<div class="hint">${IC.bulb}<span>${[].concat(t).join(' ')}</span></div>`; } say(t); } }
+  if((H.force || gt - H.last >= 12) && H.idx < H.list.length){ H.force = false; const t=H.list[H.idx++]; H.last=gt; syncHint(); if(H.el){ H.el.innerHTML = `<div class="hint">${IC.bulb}<span>${[].concat(t).join(' ')}</span></div>`; if(panel.classList.contains('center')) panelCenter(true); } say(t); } }
 
 /* ---------- nudges: Learn with me (arrow shows the way) → Try with help (the next space glows) → On your own (none) ---------- */
 const NUDGE = { mode:null, answers:null, key:null, since:0, said:new Set(), glow:null, mvUntil:null };
-const MODE_TAG = { teach:['Learn with me','t-teach'], try:['Try with help','t-try'], self:['On your own','t-self'] };
+const MODE_TAG = { demo:['Watch & try','t-teach'], teach:['Learn with me','t-teach'], try:['Try with help','t-try'], self:['On your own','t-self'] };
 const NUDGE_LINE = { c1:'nIf', then:'nThen', else:'nElse' };
 function nudgeStart(mode, answers){ nudgeStop(); Object.assign(NUDGE, { mode, answers:answers||null, key:null, since:gt, said:new Set(), mvUntil:null });
   const h = panel.querySelector('.ph-head h2'); if(h && !h.querySelector('.mode-tag')) h.insertAdjacentHTML('beforeend', `<span class="mode-tag ${MODE_TAG[mode][1]}">${MODE_TAG[mode][0]}</span>`); }
@@ -287,10 +317,11 @@ function nudgeStop(){ NUDGE.mode = null; nudgeGlow(null); nudgePoint(null); }
 function nudgeGlow(el){ if(NUDGE.glow && NUDGE.glow!==el) NUDGE.glow.classList.remove('nudge-glow'); NUDGE.glow = el; if(el) el.classList.add('nudge-glow'); }
 function nudgePoint(el){ const n = $('#nudge'); if(!el){ n.classList.remove('on'); return; }
   const r = el.getBoundingClientRect(), sr = stage.getBoundingClientRect(), k = sr.width/1920;
-  n.style.left = ((r.left + r.width/2 - sr.left)/k - 22)+'px'; n.style.top = ((r.bottom - sr.top)/k - 4)+'px'; n.classList.add('on'); } // just under the target, pointing up
+  const low = (r.top - sr.top)/k > 700; n.classList.toggle('down', low); // bottom CTA: sit just above it, pointing down; otherwise just under, pointing up
+  n.style.left = ((r.left + r.width/2 - sr.left)/k - 22)+'px'; n.style.top = (low ? (r.top - sr.top)/k - 46 : (r.bottom - sr.top)/k - 4)+'px'; n.classList.add('on'); }
 function nudgeTick(){
   if(!NUDGE.mode || panel.classList.contains('out')){ nudgeGlow(null); nudgePoint(null); return; }
-  const run = panel.querySelector('#run'), tray = panel.querySelector('.tray'), list = panel.querySelector('.rlist');
+  const run = $('#run'), tray = panel.querySelector('.tray'), list = panel.querySelector('.rlist');
   const editing = run && !run.disabled && (!tray || !tray.classList.contains('gone'));
   if(!editing || !SP.done){ nudgeGlow(null); nudgePoint(null); return; } // nothing to do yet, or Zippy is talking
   const empty = tray ? panel.querySelector('.rule .slot:not(.full)') : null, movable = list && list.querySelector('.rrow:not(.locked) .mv');
@@ -310,7 +341,7 @@ function nudgeTick(){
 }
 
 /* ---------- progress ---------- */
-const STEPS = [['PREDICTION','Predict','Q'],['FIXED_ROUTE_TEST','Test','flag'],['BUILD_CONDITIONAL','Build','build'],['ORDER_RULES','Order','list'],['DEBUG_PRIORITY','Debug','wrench'],['BUILD_FINAL_RULE','Create','build'],['FINAL_RUN','Deliver','parcel']];
+const STEPS = [['PREDICTION','Predict','Q'],['FIXED_ROUTE_TEST','Test','flag'],['DRAG_TUTORIAL','Learn','build'],['BUILD_CONDITIONAL','Build','build'],['ORDER_RULES','Order','list'],['DEBUG_PRIORITY','Debug','wrench'],['BUILD_FINAL_RULE','Create','build'],['FINAL_RUN','Deliver','parcel']];
 function renderProg(cur){ const idx = STEPS.findIndex(st=>st[0]===cur), done = cur==='COMPLETE', n = done ? STEPS.length : Math.max(0, idx);
   const segs = [...document.querySelectorAll('#skMeter .sk-seg')], lit = Math.round(segs.length * (n + (done?0:0.5)) / STEPS.length);
   segs.forEach((sg,i)=>sg.classList.toggle('on', segs.length-1-i < lit));
@@ -332,12 +363,16 @@ let course = null; let liveProps = [];
 function disposeGroup(g){ if(!g) return; W.scene.remove(g); (g.userData.carves||[]).forEach(t=>W.uncarve(t)); g.userData.carves=[]; W.disposeObject(g); } // frees its geometry, materials and textures
 function clearCourse(c){ if(c && c.group){ disposeGroup(c.group); } }
 const oldGroups = [];
+const HOUSE_AHEAD = 16;
 function buildCourse(types, startZ, opts={}){
-  const g = new THREE.Group(); g.userData.carves=[]; W.scene.add(g); oldGroups.push(g); while(oldGroups.length>3){ disposeGroup(oldGroups.shift()); }
   let z = startZ - 42, street = opts.street || 1;
   const cps = types.map(t=>{ const def=CP_TYPES[t]; const cp={type:t, def, z}; z -= 50 + (def.turn?22:0); return cp; });
   const last = cps[cps.length-1];
   const endZ = cps.length ? last.z - (last.def.turn ? 46 : 34) : startZ - 40;
+  // a course rebuilt on the same stretch (restart, retry after the final run) replaces the old one instead of stacking props on top of it
+  const top = startZ - 20, bottom = endZ - (opts.house ? HOUSE_AHEAD + 8 : 6);
+  for(let i=oldGroups.length-1;i>=0;i--){ const u=oldGroups[i].userData; if(u.top > bottom && top > u.bottom){ disposeGroup(oldGroups[i]); oldGroups.splice(i,1); } }
+  const g = new THREE.Group(); Object.assign(g.userData, {carves:[], top, bottom}); W.scene.add(g); oldGroups.push(g); while(oldGroups.length>3){ disposeGroup(oldGroups.shift()); }
   const c = {group:g, cps, startZ, endZ, opts};
   for(const cp of cps){ const d=cp.def; cp.front = cp.z + 3;
     if(d.turn){ cp.zJ = cp.z - 10; cp.front = cp.zJ + 8; cp.side = d.turn; cp.street = 'Street '+(++street); const j = W.makeJunction(g, cp.zJ, d.turn, cp.street); cp.closed = j.closed; }
@@ -347,7 +382,8 @@ function buildCourse(types, startZ, opts={}){
     if(d.bump){ cp.bz = d.water ? cp.z - 3 : cp.z; cp.bump = W.makeBump(g, cp.bz); if(!d.water) cp.front = cp.bz + 3.2; }
   }
   if(opts.finish){ W.makeFinishLine(g, endZ - 2); c.flag = W.makeFlag(g, -6.7, endZ - 2, '#F2A93B'); }
-  if(opts.house){ c.house = W.makeHouse(g, endZ - 4); c.flag = W.makeFlag(g, -7.0, endZ + 3, '#2FA66A'); c.sharma = W.makePerson(g, -8.2, endZ - 4, '#d94f8a'); c.sharma.rotation.y = -Math.PI/2; }
+  // the house sits ahead of where Zippy stops (endZ - 1.2), so the chase camera sees it, Mrs. Sharma (facing the road) and the biryani toss
+  if(opts.house){ const hz = endZ - HOUSE_AHEAD; c.house = W.makeHouse(g, hz); c.flag = W.makeFlag(g, -7.0, hz + 4.5, '#2FA66A'); c.sharma = W.makePerson(g, -8.2, hz, '#d94f8a'); }
   W.warm(g);
   return c;
 }
@@ -356,7 +392,7 @@ function propsTick(dt){
   if(course.flag) W.waveFlag(course.flag, dt);
   if(course.sharma){ const u=course.sharma.userData; u.ra.rotation.z = -2.5 + Math.sin(gt*7)*0.35; }
   for(const cp of course.cps){
-    if(cp.block){ cp.block.userData.blink(gt); if(cp.block.userData.hit){ const b=cp.block; b.rotation.x += (-1.15 - b.rotation.x)*Math.min(1, dt*7); } }
+    if(cp.block){ cp.block.userData.blink(gt); if(cp.block.userData.hit) cp.block.userData.fall(dt); }
     if(cp.scooter){ const s=cp.scooter, u=s.userData;
       if(!u.go && !u.gone && W.Z.z - cp.z < 75 && s.position.z < cp.z - 8){ const d=Math.min(dt*2.4, cp.z - 8 - s.position.z); s.position.z += d; u.spin(d); }
       if(u.go){ s.position.z += dt*u.speed; u.spin(dt*u.speed); if(s.position.z > W.Z.z + 45){ u.go=false; u.gone=true; s.visible=false; } } }
@@ -569,7 +605,7 @@ const G = { prediction:null, ruleA:null, ruleB:null, order:null, debug:null, fin
 const STORAGE_KEY = 'delivery-bot-academy-biryani-v1';
 // false: every visit starts fresh (story video, then the whole mission). true: "Resume Mission" continues saved progress.
 const RESUME_SAVED_PROGRESS = false;
-const RESUMABLE_STATES = new Set(['INTRO','PREDICTION','FIXED_ROUTE_TEST','BUILD_CONDITIONAL','ORDER_RULES','DEBUG_PRIORITY','BUILD_FINAL_RULE','FINAL_RUN','COMPLETE']);
+const RESUMABLE_STATES = new Set(['INTRO','PREDICTION','FIXED_ROUTE_TEST','DRAG_TUTORIAL','BUILD_CONDITIONAL','ORDER_RULES','DEBUG_PRIORITY','BUILD_FINAL_RULE','FINAL_RUN','COMPLETE']);
 let state = 'TITLE';
 function saveProgress(startZ){
   if(!RESUME_SAVED_PROGRESS || !RESUMABLE_STATES.has(state)) return;
@@ -643,14 +679,14 @@ async function runFixed(c, testDay){
 async function FIXED_ROUTE_TEST(){
   setState('FIXED_ROUTE_TEST', 0);
   { const off = await flash(); clearCourse(course); course = buildCourse(['practice'], 0, {finish:true}); W.placeZippy(0); W.snapCamera(); await wait(0.1); off(); }
-  setPanel(head('flag','Practice run','Empty, straight street') + fixedStepsHTML() + `<div class="btnrow"><button class="go" id="run">${IC.play}Run</button></div>`); nudgeStart('teach');
+  setPanel(head('flag','Practice run','Empty, straight street') + fixedStepsHTML(), 'Run'); nudgeStart('teach');
   say(L.pred2);
   await clickOnce($('#run')); SFX.tap(); $('#run').disabled=true; stopSpeech(); clearCaption();
   hud({}); await runFixed(course, false); hud(null);
   toast('ok','Practice passed'); SFX.ok(); await say(L.fix1); hideToast();
   // delivery day: the real road
   { const off = await flash(); clearCourse(course); course = buildCourse(['fixedDelivery'], 0, {finish:true}); W.placeZippy(0); W.snapCamera(); await wait(0.1); off(); }
-  setPanel(head('parcel','Delivery run','The real road') + fixedStepsHTML() + `<div class="btnrow"><button class="go" id="run">${IC.play}Run</button></div>`); nudgeStart('teach');
+  setPanel(head('parcel','Delivery run','The real road') + fixedStepsHTML(), 'Run'); nudgeStart('teach');
   say(L.fix2);
   await clickOnce($('#run')); SFX.tap(); $('#run').disabled=true; stopSpeech(); clearCaption();
   hud({water:1, block:1}); await runFixed(course, true); bubble('Q'); toast('bad','Crash!'); SFX.bad();
@@ -659,22 +695,60 @@ async function FIXED_ROUTE_TEST(){
   await cta('Teach Zippy');
   const next = course.endZ - 26;
   { const off = await flash(); hidePanel(); clearCourse(course); course=null; W.placeZippy(next); W.snapCamera(); await wait(0.1); off(); }
-  return BUILD_CONDITIONAL(next);
+  return DRAG_TUTORIAL(next);
 }
 async function builderLoop(opts){
   let first = true; G.tries = G.tries || {}; G.tries[opts.ctx] = 0;
   while(true){
-    opts.b.setEditable(true); const run=$('#run'); run.disabled=false; hintsOn(opts.hints, $('#hint'));
+    opts.b.setEditable(true); panelCenter(true); const run=$('#run'); run.disabled=false; hintsOn(opts.hints, $('#hint'));
     await clickOnce(run); SFX.tap(); poke();
     const miss = opts.b.missing(); if(miss.length){ opts.b.flagEmpty(); SFX.bad(); say(L.empty); continue; }
-    hintsOff(); opts.b.setEditable(false); run.disabled=true; stopSpeech(); clearCaption();
+    hintsOff(); opts.b.setEditable(false); panelCenter(false); run.disabled=true; stopSpeech(); clearCaption();
     if(!first) opts.c = await rewind(opts.c); first=false;
     const rule = opts.b.rule(); if(opts.ctx==='FIN') G._curFinal = rule; G.tries[opts.ctx]++;
     const res = await runCourse(opts.c, [].concat(rule));
     if(res.ok){ SFX.ok(); toast('ok','Rule works!'); await say(opts.okLine); hideToast(); return {rule, c:opts.c}; }
     failToast(res); SFX.bad(); await say(failLine(res, opts.ctx)); hideToast(); hud(null); bubble(null); clearTrace(); clearVehicles();
-    run.innerHTML = `${IC.replay}Run again`;
+    runLabel('Run again');
   }
+}
+/* ---------- first rule: a ghost hand shows how to drag a tile into a space, then the child tries ---------- */
+function stagePt(el){ const r=el.getBoundingClientRect(), sr=stage.getBoundingClientRect(), k=sr.width/1920; return {x:(r.left+r.width/2-sr.left)/k, y:(r.top+r.height/2-sr.top)/k}; }
+// one demo drag: the hand presses the tile, carries a copy of it to the space, and lets go
+function ghostDrag(tile, slot){ const g=$('#demo'); if(!window.gsap || !tile || !slot) return wait(0.1);
+  const a=stagePt(tile), b=stagePt(slot); g.querySelector('.chipc').innerHTML = tile.innerHTML;
+  return new Promise(res=>{ gsap.timeline({onComplete:()=>{ slot.classList.remove('drop'); res(); }})
+    .set(g, {x:a.x, y:a.y, opacity:0, display:'block'}).set(g.querySelector('.chipc'), {xPercent:-50, yPercent:-50, opacity:0, scale:1})
+    .to(g, {opacity:1, duration:.25})
+    .to(g.querySelector('.hand'), {scale:.86, duration:.15, yoyo:true, repeat:1}, '+=.1')
+    .to(g.querySelector('.chipc'), {opacity:.95, duration:.15}, '<')
+    .to(g, {x:b.x, y:b.y, duration:1.0, ease:'power2.inOut', onComplete:()=>slot.classList.add('drop')}, '+=.05')
+    .to(g.querySelector('.chipc'), {scale:.8, opacity:0, duration:.25}, '+=.2')
+    .to(g, {opacity:0, duration:.3}, '<.1').set(g, {display:'none'}); }); }
+// shows each step until the child fills that space; after the first space, the hand only comes back if they wait
+async function dragDemo(b, steps){ const P=b.root, editing=()=>{ const r=$('#run'); return r && !r.disabled; };
+  await until(()=>SP.done && editing());
+  for(let i=0;i<steps.length;i++){ const st=steps[i]; let shown=0;
+    while(!b.vals[st.key]){
+      const idle = gt - H.last;
+      if(SP.done && editing() && (i===0 || idle>5) && !(i===0 && shown>=1 && idle<4)){
+        await ghostDrag(P.querySelector(`.tile[data-kind="${st.kind}"][data-val="${st.val}"]`), P.querySelector(`.rule .slot[data-key="${st.key}"]`));
+        shown++; if(i===0 && shown===1) say(L.tutIf); await wait(1.2); }
+      else await wait(0.25); }
+    SFX.ok(); say(i<steps.length-1 ? L.tutThen : [L.tutTap, L.tutRun]); } }
+async function DRAG_TUTORIAL(startZ){
+  setState('DRAG_TUTORIAL', startZ);
+  const c = course = buildCourse(['clear'], startZ);
+  const b = builder({ rows:[{kw:'IF',kwClass:'kw-if',key:'c1',accept:'cond'},{kw:'THEN',kwClass:'kw-then',key:'then',accept:'act'}], conds:['clear','water'], acts:['GO','STOP'] });
+  setPanel(head('build','Your first rule','Drag a tile into a space') + b.html + `<div id="hint"></div>`, 'Run');
+  b.bind(panel); traceUI = {kind:'single', root:panel}; nudgeStart('demo'); panelCenter(true);
+  say(L.tut1);
+  dragDemo(b, [{key:'c1', kind:'cond', val:'clear'}, {key:'then', kind:'act', val:'GO'}]).catch(()=>{});
+  const r = await builderLoop({c, b, hints:[L.tutH1, L.tutH2], ctx:'TUT', okLine:L.tutOk});
+  $('#demo').style.display='none';
+  await cta('Next street');
+  await travelTo(r.c.endZ - 10);
+  return BUILD_CONDITIONAL(W.Z.z);
 }
 const ROWS3 = [{kw:'IF',kwClass:'kw-if',key:'c1',accept:'cond'},{kw:'THEN',kwClass:'kw-then',key:'then',accept:'act'},{kw:'ELSE',kwClass:'kw-else',key:'else',accept:'act'}];
 async function BUILD_CONDITIONAL(startZ){
@@ -682,7 +756,7 @@ async function BUILD_CONDITIONAL(startZ){
   // Part A: IF / THEN / ELSE with water
   let c = course = buildCourse(['water','dry'], startZ);
   const bA = builder({ rows:ROWS3, conds:['water','dry'], acts:['SLOW','GO'] });
-  setPanel(head('build','Water rule','IF · THEN · ELSE') + bA.html + `<div class="btnrow"><button class="go" id="run">${IC.play}Run</button></div><div id="hint"></div>`);
+  setPanel(head('build','Water rule','IF · THEN · ELSE') + bA.html + `<div id="hint"></div>`, 'Run');
   bA.bind(panel); traceUI = {kind:'single', root:panel}; nudgeStart('teach', {c1:'water', then:'SLOW', else:'GO'});
   say([L.mTeach, ...L.bcA]);
   const rA = await builderLoop({c, b:bA, hints:[L.bcAh1, L.bcAh2], ctx:'A', okLine:L.bcAok});
@@ -692,7 +766,7 @@ async function BUILD_CONDITIONAL(startZ){
   const startB = W.Z.z;
   c = course = buildCourse(['blockScooter','block'], startB);
   const lockedA = builder({ rows:ROWS3, conds:['water','dry'], acts:['SLOW','GO'], prefill:{c1:G.ruleA.c1, then:G.ruleA.then, else:G.ruleA.else} });
-  setPanel(head('build','New problem','Same rule, new road') + lockedA.html + `<div class="btnrow"><button class="go" id="run">${IC.play}Run</button></div>`);
+  setPanel(head('build','New problem','Same rule, new road') + lockedA.html, 'Run');
   lockedA.bind(panel); lockedA.setEditable(false); traceUI = {kind:'single', root:panel}; nudgeStart('teach');
   say(L.bcB); await clickOnce($('#run')); SFX.tap(); $('#run').disabled=true; stopSpeech(); clearCaption();
   let res = await runCourse(c, [G.ruleA]);
@@ -702,7 +776,7 @@ async function BUILD_CONDITIONAL(startZ){
       [{kw:'IF',kwClass:'kw-if',key:'c1',accept:'cond'},{kw:'AND',key:'c2',accept:'cond'},{kw:'THEN',kwClass:'kw-then',key:'then',accept:'act'}],
       [{kw:'IF',kwClass:'kw-if',key:'r2c1',role:'c1',accept:'cond'},{kw:'AND',key:'r2c2',role:'c2',accept:'cond'},{kw:'THEN',kwClass:'kw-then',key:'r2then',role:'then',accept:'act'}] ], fixedOp:'AND',
     conds:['block','laneClear','scooter','water'], acts:['CHANGE','STOP','GO'], prefill:{c1:'block', then:'CHANGE', r2c1:'block'} });
-  setPanel(head('build','Road block rules','Two rules · IF · AND · THEN') + bB.html + `<div class="btnrow"><button class="go" id="run">${IC.replay}Run again</button></div><div id="hint"></div>`);
+  setPanel(head('build','Road block rules','Two rules · IF · AND · THEN') + bB.html + `<div id="hint"></div>`, 'Run again');
   bB.bind(panel); traceUI = {kind:'single', root:panel};
   c = await rewind(c); nudgeStart('try'); say([L.mTry, L.bcB2]);
   const rB = await builderLoop({c, b:bB, hints:[L.bcBh1, L.bcBh2], ctx:'B', okLine:L.bcBok});
@@ -714,13 +788,13 @@ async function BUILD_CONDITIONAL(startZ){
 async function listLoop(opts){
   let first = opts.first!==false; G.tries = G.tries || {}; G.tries[opts.ctx] = 0;
   while(true){
-    opts.list.setLocked(false); const run=$('#run'); run.disabled=false; hintsOn(opts.hints, $('#hint'));
-    await clickOnce(run); SFX.tap(); hintsOff(); opts.list.setLocked(true); run.disabled=true; stopSpeech(); clearCaption();
+    opts.list.setLocked(false); panelCenter(true); const run=$('#run'); run.disabled=false; hintsOn(opts.hints, $('#hint'));
+    await clickOnce(run); SFX.tap(); hintsOff(); opts.list.setLocked(true); panelCenter(false); run.disabled=true; stopSpeech(); clearCaption();
     if(!first) opts.c = await rewind(opts.c); first=false;
     G.tries[opts.ctx]++; const res = await runCourse(opts.c, opts.list.rules);
     if(res.ok){ SFX.ok(); toast('ok','Rules work!'); await say(opts.okLine); hideToast(); return {c:opts.c}; }
     failToast(res); SFX.bad(); await say(failLine(res, opts.ctx)); hideToast(); hud(null); bubble(null); clearVehicles();
-    run.innerHTML = `${IC.replay}Run again`;
+    runLabel('Run again');
   }
 }
 async function ORDER_RULES(startZ){
@@ -728,7 +802,7 @@ async function ORDER_RULES(startZ){
   const c = course = buildCourse(['water','clear','waterTurn'], startZ, {street:1});
   const rules = [ {c1:'turn', then:'TURN'}, {c1:'clear', then:'GO', else:'SLOW'}, {c1:'water', then:'SLOW'} ]; // correct: water, turn, then the ELSE rule last
   const list = ruleList(rules, false);
-  setPanel(head('list','Order the rules','Zippy checks from the top') + `<div class="order-note">${IC.down}First true rule wins · a rule with ELSE always answers</div>` + list.html + `<div class="btnrow"><button class="go" id="run">${IC.play}Run</button></div><div id="hint"></div>`);
+  setPanel(head('list','Order the rules','Zippy checks from the top') + `<div class="order-note">${IC.down}First true rule wins · a rule with ELSE always answers</div>` + list.html + `<div id="hint"></div>`, 'Run');
   list.bind(panel); traceUI = {kind:'list', root:panel}; nudgeStart('try');
   say([L.mTry, ...L.ord]);
   const r = await listLoop({c, list, hints:[L.ordh1, L.ordh2], ctx:'ORD', okLine:L.ordOk});
@@ -741,12 +815,12 @@ async function DEBUG_PRIORITY(startZ){
   setState('DEBUG_PRIORITY', startZ);
   let c = course = buildCourse(['block','water','dry'], startZ);
   const list = ruleList([ {c1:'dry', then:'GO'}, {c1:'water', then:'SLOW'}, {c1:'block', op:'AND', c2:'laneClear', then:'CHANGE'} ], true);
-  setPanel(head('wrench','Street rules','Something is wrong') + `<div class="order-note">${IC.down}First true rule wins · a rule with ELSE always answers</div>` + list.html + `<div class="btnrow"><button class="go" id="run">${IC.eye}Watch run</button></div><div id="hint"></div>`);
+  setPanel(head('wrench','Street rules','Something is wrong') + `<div class="order-note">${IC.down}First true rule wins · a rule with ELSE always answers</div>` + list.html + `<div id="hint"></div>`, 'Watch run');
   list.bind(panel); traceUI = {kind:'list', root:panel};
   nudgeStart('self'); say([L.mSelf, L.dbg]); await clickOnce($('#run')); SFX.tap(); $('#run').disabled=true; stopSpeech(); clearCaption();
   const res = await runCourse(c, list.rules); failToast(res); SFX.bad(); await say(L.dbgFail); hideToast(); hud(null); bubble(null);
   $('.ph-head h2').textContent = 'Fix the bug'; $('.ph-head small').textContent = 'Change the order'; nudgeStart('self');
-  $('#run').innerHTML = `${IC.replay}Run again`;
+  runLabel('Run again');
   const r = await listLoop({c, list, hints:[L.dbgh1, L.dbgh2], ctx:'DBG', okLine:L.dbgOk, first:false});
   G.debug = list.rules.slice(); saveProgress(startZ);
   await cta('Last street');
@@ -758,7 +832,7 @@ async function BUILD_FINAL_RULE(startZ){
   const c = course = buildCourse(['water','bump','waterBump','clear'], startZ);
   const b = builder({ rows:[{kw:'IF',kwClass:'kw-if',key:'c1',accept:'cond'},{kwSlot:'k2',key:'c2',accept:'cond'},{kw:'THEN',kwClass:'kw-then',key:'then',accept:'act'},{kw:'ELSE',kwClass:'kw-else',key:'else',accept:'act'}],
     kws:['AND','OR'], conds:['water','bump','dry','laneClear'], acts:['SLOW','GO'] });
-  setPanel(head('build','Build it yourself','Your conditions, actions and operator') + b.html + `<div class="btnrow"><button class="go" id="run">${IC.play}Run</button></div><div id="hint"></div>`);
+  setPanel(head('build','Build it yourself','Your conditions, actions and operator') + b.html + `<div id="hint"></div>`, 'Run');
   b.bind(panel); traceUI = {kind:'single', root:panel}; nudgeStart('self');
   say([L.mSelf, ...L.fin]);
   const r = await builderLoop({c, b, hints:[L.finh1, L.finh2], ctx:'FIN', okLine:L.finOk});
@@ -783,7 +857,7 @@ async function FINAL_RUN(startZ){
   const rules = rulebook();
   const c = course = buildCourse(['water','block','turnL','blockScooter','bump','waterTurnR','water','clear'], startZ, {house:true, street:1}); // the wet turn re-tests rule order
   const list = ruleList(rules, true);
-  setPanel(head('parcel','Zippy\'s rulebook','Your rules, in your order') + list.html + `<div class="btnrow"><button class="go" id="run">${IC.play}Start</button></div>`);
+  setPanel(head('parcel','Zippy\'s rulebook','Your rules, in your order') + list.html, 'Start');
   list.bind(panel); traceUI = {kind:'list', root:panel};
   panel.querySelector('#rlist').classList.add('compact'); nudgeStart('self');
   say(L.run); await clickOnce($('#run')); SFX.tap(); $('#run').disabled=true; stopSpeech(); clearCaption();
@@ -795,10 +869,12 @@ async function FINAL_RUN(startZ){
     return BUILD_FINAL_RULE(SNAP.BUILD_FINAL_RULE ?? startZ);
   }
   // arrive at Mrs. Sharma's house
+  // the rulebook panel steps aside and the view pans a little left, so the house, Mrs. Sharma and the toss are on screen
+  hidePanel(); W.cam.shiftTarget = 0.12;
   bubble('STOP'); await stopAt(c.endZ - 1.2, 8); bubble(null); lane(-3);
   const p = W.makeBiryani(c.group, W.Z.x, 1.3, W.Z.z); SFX.drop();
   const tx = c.sharma ? c.sharma.position.x + 0.9 : W.Z.x - 4.4, tz = c.sharma ? c.sharma.position.z : W.Z.z - 0.8, x0=W.Z.x, z0=W.Z.z;
-  const t0=gt; await until(()=>{ const k=Math.min(1,(gt-t0)/1.0); p.position.x = x0 + (tx-x0)*k; p.position.y = 1.3 + Math.sin(k*Math.PI)*1.6 - k*0.1; p.position.z = z0 + (tz-z0)*k; p.rotation.y = k*3; return k>=1; });
+  const t0=gt; await until(()=>{ const k=Math.min(1,(gt-t0)/1.3); p.position.x = x0 + (tx-x0)*k; p.position.y = 1.3 + Math.sin(k*Math.PI)*2.4 - k*0.1; p.position.z = z0 + (tz-z0)*k; p.rotation.y = k*3; return k>=1; });
   SFX.ok(); toast('ok','Biryani delivered!'); W.cam.liftTarget = 1.6; await say(L.runOk); hideToast();
   return COMPLETE();
 }
@@ -833,7 +909,7 @@ async function finalCheck(box){ let tries = 0;
 // what this child actually did (entries only for stages they played in this save)
 function recordHTML(){ const t = G.tries || {}, n = k => t[k]===1 ? 'first try' : `${t[k]} tries`;
   const guess = { safe:'slows down', go:'keeps going', back:'turns back' }[G.prediction];
-  const rows = [ guess && ['Q', `Your guess: ${guess}`], t.A && ['build', `IF · THEN · ELSE rule: ${n('A')}`], t.B && ['check', `AND rules: ${n('B')}`],
+  const rows = [ guess && ['Q', `Your guess: ${guess}`], t.TUT && ['build', `First rule: ${n('TUT')}`], t.A && ['build', `IF · THEN · ELSE rule: ${n('A')}`], t.B && ['check', `AND rules: ${n('B')}`],
     t.ORD && ['list', `Rule order: ${n('ORD')}`], t.DBG && ['wrench', `Bug fixed: ${n('DBG')}`], t.FIN && ['build', `OR rule: ${n('FIN')}`], t.CHK && ['check', `Last check: ${n('CHK')}`] ].filter(Boolean);
   return `<div class="rec-h">What you did</div>` + rows.map(([i,x])=>`<div class="sk"><i>${IC[i]}</i>${x}</div>`).join(''); }
 function confetti(){ const cv=$('#confetti'), g=cv.getContext('2d'); const cols=['#ffd84a','#2FA66A','#69B9FF','#E76D5B','#2F6FED','#fff']; const ps=Array.from({length:180},()=>({x:Math.random()*1920, y:-Math.random()*800, vx:(Math.random()-.5)*3, vy:3+Math.random()*4, r:Math.random()*6, s:6+Math.random()*10, c:cols[(Math.random()*6)|0]}));
@@ -841,10 +917,10 @@ function confetti(){ const cv=$('#confetti'), g=cv.getContext('2d'); const cols=
 
 /* ---------- activity runner (restartable) ---------- */
 let restartFn = null;
-function launch(fn, ...args){ epoch++; waiters.length = 0; H.prev = null; nudgeStop(); restartFn = ()=>launch(fn, ...args); hintsOff(); hideToast(); bubble(null); hud(null); clearVehicles(); stopSpeech(); clearCaption();
+function launch(fn, ...args){ epoch++; if(window.gsap) gsap.killTweensOf('#demo, #demo *'); $('#demo').style.display='none'; waiters.length = 0; H.prev = null; nudgeStop(); restartFn = ()=>launch(fn, ...args); hintsOff(); hideToast(); bubble(null); hud(null); clearVehicles(); stopSpeech(); clearCaption();
   Promise.resolve().then(()=>fn(...args)).catch(e=>{ if(e!==CANCEL) console.error(e); }); }
 const SNAP = {};
-const acts = { PREDICTION, FIXED_ROUTE_TEST, BUILD_CONDITIONAL, ORDER_RULES, DEBUG_PRIORITY, BUILD_FINAL_RULE, FINAL_RUN };
+const acts = { PREDICTION, FIXED_ROUTE_TEST, DRAG_TUTORIAL, BUILD_CONDITIONAL, ORDER_RULES, DEBUG_PRIORITY, BUILD_FINAL_RULE, FINAL_RUN };
 function restartCurrent(){ const s = state; if(s==='COMPLETE') return;
   if(s==='INTRO'){ clearCourse(course); course=null; W.placeZippy(0); W.snapCamera(); hideCta(); launch(INTRO); return; }
   const z = SNAP[s] ?? W.Z.z; clearCourse(course); course=null; W.placeZippy(z); W.snapCamera(); hideCta();
@@ -857,12 +933,29 @@ function syncCtl(){ $('#skSound').classList.toggle('off', A.muted); $('#skMute s
 function toggleMute(){ A.muted=!A.muted; VOICE_EL.muted=A.muted; audioFade(!A.muted); if(A.muted){ try{speechSynthesis.cancel();}catch(e){} } syncCtl(); }
 function toggleCap(){ SP.captions=!SP.captions; syncCtl(); }
 function replay(){ if(SP.last) say(SP.last); }
-function setPause(p){ if(state==='TITLE') return; paused=p; $('#pause').classList.toggle('hide', !p); try{ p?speechSynthesis.pause():speechSynthesis.resume(); }catch(e){} if(SP.audio){ if(p) SP.audio.pause(); else SP.audio.play().catch(()=>{}); } if(A.ctx){ (p ? A.ctx.suspend() : A.ctx.resume()).catch(()=>{}); } if(p) setTimeout(()=>$('#pResume').focus({preventScroll:true}),30); }
+function setPause(p, card=true){ if(state==='TITLE') return; paused=p; $('#pause').classList.toggle('hide', !(p && card)); $('#pRestart').hidden = state==='COMPLETE'; /* nothing to restart on the results card */ try{ p?speechSynthesis.pause():speechSynthesis.resume(); }catch(e){} if(SP.audio){ if(p) SP.audio.pause(); else SP.audio.play().catch(()=>{}); } if(A.ctx){ (p ? A.ctx.suspend() : A.ctx.resume()).catch(()=>{}); } if(p && card) setTimeout(()=>$('#pResume').focus({preventScroll:true}),30); }
 const skMenu = $('#skMenu');
 function menuOpen(o){ skMenu.classList.toggle('hide', !o); $('#skSound').setAttribute('aria-expanded', String(o)); }
-$('#skSound').onclick=()=>{ SFX.tap(); menuOpen(skMenu.classList.contains('hide')); };
+$('#skSound').onclick=()=>{ SFX.tap(); if(infoIsOpen()) infoOpen(false); menuOpen(skMenu.classList.contains('hide')); };
 $('#skReplay').onclick=()=>{ SFX.tap(); menuOpen(false); replay(); }; $('#skMute').onclick=()=>{ toggleMute(); SFX.tap(); menuOpen(false); };
-$('#skInfo').onclick=()=>{ SFX.tap(); menuOpen(false); setPause(true); };
+/* i button: mission info only (goal, current step, how rules work, how to play); the game waits while it is open */
+const STAGE_INFO = {
+  INTRO:"Meet Zippy and its delivery mission.", PREDICTION:"Guess what Zippy will do when it reaches the water.",
+  FIXED_ROUTE_TEST:"Watch Zippy follow its straight-only steps.", DRAG_TUTORIAL:"Make your first rule: drag tiles into the IF and THEN spaces.",
+  BUILD_CONDITIONAL:"Build rules with IF, THEN, ELSE and AND for water and road blocks.", ORDER_RULES:"Move the rules into the right order, top to bottom.",
+  DEBUG_PRIORITY:"Find the bug: change the order so the most important rule comes first.", BUILD_FINAL_RULE:"Choose the conditions, the actions and AND or OR yourself.",
+  FINAL_RUN:"Deliver the biryani using all the rules you made.", COMPLETE:"Mission complete! Answer the last check and see what you did." };
+const infoPanel = $('#skInfoPanel');
+function infoIsOpen(){ return !infoPanel.classList.contains('hide'); }
+function infoOpen(o){ if(o===infoIsOpen()) return;
+  if(o){ const i = STEPS.findIndex(st=>st[0]===state);
+    $('#ipStep').textContent = state==='COMPLETE' ? 'Mission complete' : i>=0 ? `Step ${i+1} of ${STEPS.length} · ${STEPS[i][1]}` : 'Getting started';
+    $('#ipNow').textContent = STAGE_INFO[state] || STAGE_INFO.INTRO; menuOpen(false); if(!paused) setPause(true, false); }
+  else if(paused && $('#pause').classList.contains('hide')) setPause(false);
+  infoPanel.classList.toggle('hide', !o); $('#skInfo').setAttribute('aria-expanded', String(o));
+  if(o) setTimeout(()=>$('#ipClose').focus({preventScroll:true}), 30); else $('#skInfo').focus({preventScroll:true}); }
+$('#skInfo').onclick=()=>{ SFX.tap(); infoOpen(!infoIsOpen()); };
+$('#ipClose').onclick=()=>{ SFX.tap(); infoOpen(false); };
 $('#skExit').onclick=()=>{ SFX.tap(); location.reload(); }; // back to the title; progress is already saved
 $('#skHint').onclick=()=>{ if(!H.list || H.idx>=H.list.length) return; SFX.tap(); H.force = true; }; // next hint now, even over narration
 addEventListener('pointerdown', e=>{ if(!skMenu.classList.contains('hide') && !e.target.closest('#skMenu,#skSound')) menuOpen(false); }, true);
@@ -880,12 +973,13 @@ $('#againBtn').onclick=async()=>{ // start over from the very beginning: story v
   await HookVideo.play();
   timer.start(); launch(INTRO); };
 addEventListener('keydown', e=>{ if(state==='TITLE' || HookVideo.open) return; const k=e.key.toLowerCase();
+  if(infoIsOpen()){ if(k==='escape' || k==='p' || k==='i'){ e.preventDefault(); infoOpen(false); } return; } if(k==='i' && !paused){ infoOpen(true); return; }
   if(k==='escape' && !skMenu.classList.contains('hide')){ menuOpen(false); return; }
   if(k==='escape' || k==='p'){ e.preventDefault(); setPause(!paused); } else if(paused) return; else if(k==='m') toggleMute(); else if(k==='c') toggleCap(); else if(k==='r' && !e.target.closest('.tile')) replay(); });
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden && state!=='TITLE' && !paused && !HookVideo.open) setPause(true); });
 
 /* ---------- title ---------- */
-$('#titleBg').style.backgroundImage = `url(${ASSET.titleThumbnail})`; $('#doneBot').src = ASSET.zippyImg; try{ $('#doneBot').decode().catch(()=>{}); }catch(e){} // decode now, not when the results card first appears
+$('#titleBg').style.setProperty('--title-img', `url("${new URL(ASSET.titleThumbnail, location.href).href}")`); /* absolute: the stylesheet in css/ uses this var */ $('#doneBot').src = ASSET.zippyImg; try{ $('#doneBot').decode().catch(()=>{}); }catch(e){} // decode now, not when the results card first appears
 W.cam.mode = 'title'; W.placeZippy(0);
 if(!RESUME_SAVED_PROGRESS) clearProgress(); // drop anything saved by an older version
 const savedProgress = RESUME_SAVED_PROGRESS ? loadProgress() : null;

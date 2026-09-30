@@ -15,7 +15,7 @@ const W = {};
 const T = THREE;
 const canvas = document.getElementById('gl');
 const renderer = new T.WebGLRenderer({canvas, antialias:true, powerPreference:'high-performance'});
-const QUALITY = [ {pr:1.5, shadow:2048}, {pr:1.25, shadow:2048}, {pr:1, shadow:1024}, {pr:0.85, shadow:1024} ];
+const QUALITY = [ {pr:2, shadow:2048}, {pr:1.5, shadow:2048}, {pr:1.25, shadow:2048}, {pr:1, shadow:1024}, {pr:0.85, shadow:1024} ]; // full sharpness on high-DPI screens; steps down if frames are slow
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, QUALITY[0].pr));
 renderer.outputColorSpace = T.SRGBColorSpace;
 renderer.shadowMap.enabled = true;
@@ -34,8 +34,8 @@ const mirrorCam = new T.PerspectiveCamera(42, 420/170, 0.3, 300);
 W.mirrorCam = mirrorCam;
 
 // lights
-scene.add(new T.HemisphereLight('#dff0ff', '#b8a98f', 1.15));
-const sun = new T.DirectionalLight('#fff0d4', 2.1);
+scene.add(new T.HemisphereLight('#e4f1ff', '#8a7c66', 1.0)); // darker ground bounce: shaded sides read, so trees and props look solid
+const sun = new T.DirectionalLight('#fff0d4', 2.35);
 sun.position.set(-30, 50, 20);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
@@ -105,7 +105,7 @@ function instOne(geo, mat, list, cast, kind){ const im=new T.InstancedMesh(geo, 
   return im; }
 const CARVE_HW = {walk:6.0, hedge:11.6, lawn:12.4, fence:12.9, tree:10.8, flower:11.6, light:9, bld:22};
 const ZERO = new T.Matrix4().makeScale(0,0,0);
-W.carve = (side, zJ)=>{ const tok=[]; for(const r of REG){ const hw=CARVE_HW[r.kind]; let ch=false;
+W.carve = (side, zJ, hws=CARVE_HW)=>{ const tok=[]; for(const r of REG){ const hw=hws[r.kind]; if(hw==null) continue; let ch=false; // kinds missing from hws are kept
     r.list.forEach((p,i)=>{ if(Math.sign(p.x)!==side) return; const ext=(p.ez!=null?p.ez:(p.sz||1.2)/2); if(Math.abs(p.z-zJ) < hw+ext){ if(r.cnt[i]++===0){ r.im.setMatrixAt(i, ZERO); ch=true; } tok.push([r,i]); } });
     if(ch) r.im.instanceMatrix.needsUpdate=true; } return tok; };
 W.uncarve = (tok)=>{ const touched=new Set(); for(const [r,i] of tok){ if(r.cnt[i]>0 && --r.cnt[i]===0){ r.im.setMatrixAt(i, r.saved[i]); touched.add(r); } } touched.forEach(r=>r.im.instanceMatrix.needsUpdate=true); };
@@ -159,7 +159,7 @@ const zMat = new T.SpriteMaterial({map:zTex, transparent:true, alphaTest:0.12});
 const zippy = new T.Sprite(zMat); zippy.center.set(0.5, 0.0); zippy.scale.set(ZW, ZH, 1); zippy.renderOrder = 5; scene.add(zippy);
 const blobTex = canvasTex(128,128,(g,w,h)=>{ const gr=g.createRadialGradient(64,64,4,64,64,62); gr.addColorStop(0,'rgba(0,0,0,.55)'); gr.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=gr; g.fillRect(0,0,w,h); });
 const blob = new T.Mesh(new T.PlaneGeometry(1,1), new T.MeshBasicMaterial({map:blobTex, transparent:true, depthWrite:false}));
-blob.rotation.x=-Math.PI/2; blob.scale.set(1.5, 2.6, 1); scene.add(blob);
+blob.rotation.x=-Math.PI/2; blob.scale.set(1.5, 2.6, 1); blob.renderOrder = 2; scene.add(blob); // after puddles (renderOrder 1), so the shadow sits on the water
 const glowTex = canvasTex(128,128,(g,w,h)=>{ const gr=g.createRadialGradient(64,64,2,64,64,62); gr.addColorStop(0,'rgba(255,240,200,1)'); gr.addColorStop(.25,'rgba(255,120,40,.9)'); gr.addColorStop(1,'rgba(255,60,0,0)'); g.fillStyle=gr; g.fillRect(0,0,w,h); });
 const brake = new T.Sprite(new T.SpriteMaterial({map:glowTex, transparent:true, blending:T.AdditiveBlending, depthWrite:false}));
 brake.scale.set(1.0,0.7,1); brake.renderOrder = 6; scene.add(brake);
@@ -189,14 +189,15 @@ function updZippy(dt){
   Z.bobT += dt*(4 + Z.v*1.4);
   const fx=Math.sin(Z.h), fz=-Math.cos(Z.h);
   zippy.position.set(Z.x, Math.abs(Math.sin(Z.bobT))*0.035*(Z.v>0.2?1:0.2) + Z.jy, Z.z);
-  zMat.rotation = Math.sin(Z.bobT*1.6)*0.42*Z.slip;
+  const lean = Math.max(-0.16, Math.min(0.16, -Z.lat*0.06)); // leans into lane changes and turns
+  zMat.rotation = Math.sin(Z.bobT*1.6)*0.42*Z.slip + lean*(1-Z.slip);
   blob.position.set(Z.x+fx*0.2, 0.02, Z.z+fz*0.2); blob.rotation.z = Z.h; blob.material.opacity = 1/(1+Z.jy*1.5);
   brake.position.set(Z.x + Math.sin(-zMat.rotation)*ZH*0.36 - fx*0.08, ZH*0.365 + Z.jy, Z.z - fz*0.08);
   brake.material.opacity = Z.braking; brake.visible = Z.braking>0.02;
 }
 
 // ---------- camera ----------
-const cam = W.cam = {mode:'intro', t:0, shift:0, shiftTarget:0, lift:0, liftTarget:0, shake:0};
+const cam = W.cam = {mode:'intro', t:0, shift:0, shiftTarget:0, lift:0, liftTarget:0, shake:0, x:-3};
 W.shake = a=>{ cam.shake = Math.max(cam.shake, a); };
 const tmpV = new T.Vector3(), look = new T.Vector3(0,1,-10);
 const CAM = { height:4.0, back:8.4, ahead:11, lookY:0.9 }; // chase view: a little higher so the road and Zippy fill the frame
@@ -206,8 +207,10 @@ function updCamera(dt, rawDt){
   cam.lift += (cam.liftTarget - cam.lift)*Math.min(1, rawDt*2);
   let px, py, pz, lx, ly, lz, k;
   if(cam.mode==='title'){ const a=cam.t*0.05; px=Math.sin(a)*4; py=9; pz=Z.z+30; lx=0; ly=3; lz=Z.z-40; k=1; }
-  else { const fx=Math.sin(Z.h), fz=-Math.cos(Z.h), c2=Math.cos(Z.h)**2, cs=Z.x*c2, bk=CAM.back+cam.lift*1.6; // cs: on a straight the camera sits on the road's centre line
-    px=Z.x-cs-fx*bk; py=CAM.height+cam.lift; pz=Z.z-fz*bk; lx=Z.x-cs+fx*CAM.ahead; ly=CAM.lookY; lz=Z.z+fz*CAM.ahead; k=1-Math.exp(-rawDt*(cam.mode==='intro'?1.1:3.6)); }
+  else { const fx=Math.sin(Z.h), fz=-Math.cos(Z.h), bk=CAM.back+cam.lift*1.6;
+    // the camera sits right behind Zippy: its lane is followed through a soft filter, so lane changes glide and a slip's wobble doesn't shake the view
+    cam.x += (Z.x - cam.x)*Math.min(1, rawDt*(Z.path ? 6 : 2.6));
+    px=cam.x-fx*bk; py=CAM.height+cam.lift; pz=Z.z-fz*bk; lx=cam.x+fx*CAM.ahead; ly=CAM.lookY; lz=Z.z+fz*CAM.ahead; k=1-Math.exp(-rawDt*(cam.mode==='intro'?1.1:4.5)); }
   if(cam.mode==='title'){ camera.position.set(px,py,pz); look.set(lx,ly,lz); }
   else { tmpV.set(px,py,pz); camera.position.lerp(tmpV, k); tmpV.set(lx,ly,lz); look.lerp(tmpV, k); }
   camera.lookAt(look);
@@ -217,7 +220,7 @@ function updCamera(dt, rawDt){
   placeSun(Z.x, Z.z-12);
   { const fx=Math.sin(Z.h), fz=-Math.cos(Z.h); mirrorCam.position.set(Z.x-fx*1.2, 2.7, Z.z-fz*1.2); mirrorCam.lookAt(Z.x-fx*40, 1.4, Z.z-fz*40); }
 }
-W.snapCamera = ()=>{ camera.position.set(0, CAM.height+cam.lift, Z.z+CAM.back+cam.lift*1.6); look.set(0, CAM.lookY, Z.z-CAM.ahead); camera.lookAt(look); };
+W.snapCamera = ()=>{ cam.x = Z.x; camera.position.set(Z.x, CAM.height+cam.lift, Z.z+CAM.back+cam.lift*1.6); look.set(Z.x, CAM.lookY, Z.z-CAM.ahead); camera.lookAt(look); };
 
 // ---------- reuse: every geometry / material / texture a prop needs is made once and kept (see W.disposeObject) ----------
 const SHARED = new Set(), CACHE = new Map();
@@ -301,7 +304,9 @@ W.makeFlag = (g, x, z, color='#F2A93B')=>{ const f=new T.Group(); f.position.set
   const cloth=mesh(new T.PlaneGeometry(1.8,1.1,8,1), Lam({color, side:T.DoubleSide}), 0.9,3.6,0, f); f.userData={cloth,t:0}; return f; };
 W.waveFlag = (f, dt)=>{ const u=f.userData; u.t+=dt; const p=u.cloth.geometry.attributes.position; for(let i=0;i<p.count;i++){ const x=p.getX(i)+0.9; p.setZ(i, Math.sin(u.t*5 + x*3)*0.12*x); } p.needsUpdate=true; };
 W.makeFinishLine = (g, z)=>{ const c = ctex('finish',256,32,(gg,w,h)=>{ for(let i=0;i<16;i++){ for(let j=0;j<2;j++){ gg.fillStyle=(i+j)%2?'#183153':'#ffffff'; gg.fillRect(i*16,j*16,16,16);} } }); const m=new T.Mesh(Gplane(11,1.2), Mat('finish', ()=>new T.MeshLambertMaterial({map:c}))); m.rotation.x=-Math.PI/2; m.position.set(0,0.017,z); m.receiveShadow=true; g.add(m); };
+const HOUSE_HW = {hedge:4.2, fence:4.6, tree:11, flower:4.2, light:11}; // trees/lights: also the ones between the camera and the house // clear the roadside in front of the house; sidewalk and lawn stay
 W.makeHouse = (g, z)=>{ const h=new T.Group(); h.position.set(-15.5,0,z); g.add(h);
+  g.userData.carves = g.userData.carves || []; g.userData.carves.push(W.carve(-1, z, HOUSE_HW));
   mesh(Gbox(7,5,6), M.house, 0,2.5,0, h); const roof=mesh(Gcone(5.4,2.6,4), M.roof, 0,6.3,0, h); roof.rotation.y=Math.PI/4;
   mesh(Gbox(1.5,2.6,0.12), M.wood, 3.51,1.3,0, h).rotation.y=Math.PI/2;
   mesh(Gbox(0.1,1.2,1.4), M.glass, 3.52,3.2,-1.8, h); mesh(Gbox(0.1,1.2,1.4), M.glass, 3.52,3.2,1.8, h);
@@ -320,30 +325,37 @@ W.makePuddle = (g, z, w=11, len=6.5)=>{
     c.globalCompositeOperation='source-atop'; const gr=c.createLinearGradient(0,0,0,H2); gr.addColorStop(0,'#cfe6ff'); gr.addColorStop(.5,'#8ec0ec'); gr.addColorStop(1,'#5f93c8'); c.fillStyle=gr; c.fillRect(0,0,W2,H2);
     c.strokeStyle='rgba(255,255,255,.75)'; c.lineWidth=6; c.lineCap='round'; for(let i=0;i<9;i++){ const y=40+i*30, x=60+((i*97)%300); c.beginPath(); c.moveTo(x,y); c.lineTo(x+60+((i*53)%80),y-6); c.stroke(); }
     c.globalCompositeOperation='source-over'; });
-  const m = new T.Mesh(Gplane(w,len), Mat('puddle', ()=>new T.MeshBasicMaterial({map:tex, transparent:true, depthWrite:false, opacity:0.9})));
+  // stronger polygon offset than the lane paint, so dashes and edge lines don't show through the water
+  const m = new T.Mesh(Gplane(w,len), Mat('puddle', ()=>new T.MeshBasicMaterial({map:tex, transparent:true, depthWrite:false, opacity:0.9, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-8})));
   m.rotation.x=-Math.PI/2; m.position.set(0,0.02,z); m.renderOrder=1; g.add(m); return m; };
 const lampA = Mat('lampA', ()=>new T.MeshBasicMaterial({color:'#ffb000'})), lampB = Mat('lampB', ()=>new T.MeshBasicMaterial({color:'#553300'})); // all road-block lamps blink together
+// fit a line of sign text inside maxW canvas px by shrinking the font
+function fitFont(c, text, px, maxW){ c.font=`900 ${px}px sans-serif`; const w=c.measureText(text).width; if(w>maxW){ px=Math.floor(px*maxW/w); c.font=`900 ${px}px sans-serif`; } }
 W.makeBlock = (g, z, x=-3)=>{ const b=new T.Group(); b.position.set(x,0,z); g.add(b);
+  const bar=new T.Group(); b.add(bar); // the part that tips over when Zippy hits it; the cones fall on their own
   const mats=[M.white,M.white,M.white,M.white,matStripe,matStripe];
-  for(const y of [1.3,0.72]){ const bd=new T.Mesh(Gbox(4.6,0.46,0.12), mats); bd.position.set(0,y,0); bd.castShadow=true; b.add(bd); }
-  for(const lx of [-2.0,2.0]){ const l1=mesh(Gbox(0.12,1.6,0.12), M.black, lx,0.8,0.25, b); l1.rotation.x=0.28; const l2=mesh(Gbox(0.12,1.6,0.12), M.black, lx,0.8,-0.25, b); l2.rotation.x=-0.28; }
-  const sign = new T.Mesh(Gplane(2.2,0.6), Mat('blockSign', ()=>new T.MeshLambertMaterial({map:canvasTex(256,70,(c,w,h)=>{ c.fillStyle='#ffd21f'; c.fillRect(0,0,w,h); c.strokeStyle='#1d232b'; c.lineWidth=6; c.strokeRect(3,3,w-6,h-6); c.fillStyle='#1d232b'; c.font='900 38px sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillText('ROAD BLOCK',w/2,h/2+2); })})));
-  sign.position.set(0,1.9,0.07); b.add(sign); mesh(Gbox(2.3,0.08,0.08), M.black, 0,1.58,0.05, b);
-  const lamp = mesh(Gsph(0.14,10,8), lampA, 2.0,1.68,0, b); const lamp2 = mesh(Gsph(0.14,10,8), lampB, -2.0,1.68,0, b);
-  for(const cx of [-2.7,2.7]){ const c=new T.Group(); c.position.set(cx,0,0.9); b.add(c); mesh(Gcone(0.34,0.95,14), M.cone, 0,0.52,0, c); mesh(Gcyl(0.22,0.26,0.15,14), M.white, 0,0.5,0, c); mesh(Gbox(0.8,0.08,0.8), M.cone, 0,0.04,0, c); }
-  b.userData = { blink(t){ const on=Math.floor(t*3)%2===0; lamp.material.color.set(on?'#ffb000':'#553300'); lamp2.material.color.set(on?'#553300':'#ffb000'); } };
+  for(const y of [1.3,0.72]){ const bd=new T.Mesh(Gbox(4.6,0.46,0.12), mats); bd.position.set(0,y,0); bd.castShadow=true; bar.add(bd); }
+  for(const lx of [-2.0,2.0]){ const l1=mesh(Gbox(0.12,1.6,0.12), M.black, lx,0.8,0.25, bar); l1.rotation.x=0.28; const l2=mesh(Gbox(0.12,1.6,0.12), M.black, lx,0.8,-0.25, bar); l2.rotation.x=-0.28; }
+  const sign = new T.Mesh(Gplane(2.2,0.6), Mat('blockSign', ()=>new T.MeshLambertMaterial({map:canvasTex(256,70,(c,w,h)=>{ c.fillStyle='#ffd21f'; c.fillRect(0,0,w,h); c.strokeStyle='#1d232b'; c.lineWidth=6; c.strokeRect(3,3,w-6,h-6); c.fillStyle='#1d232b'; fitFont(c,'ROAD BLOCK',38,w-24); c.textAlign='center'; c.textBaseline='middle'; c.fillText('ROAD BLOCK',w/2,h/2+2); })})));
+  sign.position.set(0,1.9,0.07); bar.add(sign); mesh(Gbox(2.3,0.08,0.08), M.black, 0,1.58,0.05, bar);
+  const lamp = mesh(Gsph(0.14,10,8), lampA, 2.0,1.68,0, bar); const lamp2 = mesh(Gsph(0.14,10,8), lampB, -2.0,1.68,0, bar);
+  const cones=[]; for(const cx of [-2.7,2.7]){ const c=new T.Group(); c.position.set(cx,0,0.9); b.add(c); cones.push(c); mesh(Gcone(0.34,0.95,14), M.cone, 0,0.52,0, c); mesh(Gcyl(0.22,0.26,0.15,14), M.white, 0,0.5,0, c); mesh(Gbox(0.8,0.08,0.8), M.cone, 0,0.04,0, c); }
+  b.userData = { hit:false, blink(t){ const on=Math.floor(t*3)%2===0; lamp.material.color.set(on?'#ffb000':'#553300'); lamp2.material.color.set(on?'#553300':'#ffb000'); },
+    // knocked over: the barrier falls away from Zippy, the cones roll onto their sides (kept on the ground)
+    fall(dt){ const k=Math.min(1, dt*7); bar.rotation.x += (-1.4 - bar.rotation.x)*k;
+      cones.forEach((c,i)=>{ const s=i?1:-1; c.rotation.z += (-s*1.45 - c.rotation.z)*k; c.position.y += (0.3 - c.position.y)*k; c.position.x += (s*3.3 - c.position.x)*k; }); } };
   return b; };
 W.makeClosed = (g, z)=>{ const b=new T.Group(); b.position.set(0,0,z); g.add(b); const mats=[M.white,M.white,M.white,M.white,matStripe,matStripe];
   for(const y of [1.25,0.65]){ const bd=new T.Mesh(Gbox(11,0.5,0.14), mats); bd.position.set(0,y,0); bd.castShadow=true; b.add(bd); }
   for(const lx of [-5,-1.7,1.7,5]) mesh(Gbox(0.14,1.5,0.14), M.black, lx,0.75,0, b);
-  const sign=new T.Mesh(Gplane(3.4,0.9), Mat('closedSign', ()=>new T.MeshLambertMaterial({map:canvasTex(320,84,(c,w,h)=>{ c.fillStyle='#d9342b'; c.fillRect(0,0,w,h); c.strokeStyle='#fff'; c.lineWidth=6; c.strokeRect(4,4,w-8,h-8); c.fillStyle='#fff'; c.font='900 46px sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillText('ROAD CLOSED',w/2,h/2+2); })})));
+  const sign=new T.Mesh(Gplane(3.4,0.9), Mat('closedSign', ()=>new T.MeshLambertMaterial({map:canvasTex(320,84,(c,w,h)=>{ c.fillStyle='#d9342b'; c.fillRect(0,0,w,h); c.strokeStyle='#fff'; c.lineWidth=6; c.strokeRect(4,4,w-8,h-8); c.fillStyle='#fff'; fitFont(c,'ROAD CLOSED',46,w-30); c.textAlign='center'; c.textBaseline='middle'; c.fillText('ROAD CLOSED',w/2,h/2+2); })})));
   sign.position.set(0,2.05,0.08); b.add(sign); return b; };
 W.makeBump = (g, z)=>{ const mats=[M.black,M.black,matBump,M.black,matBump,matBump]; const m=new T.Mesh(Gbox(11,0.18,0.9), mats); m.position.set(0,0.09,z); m.receiveShadow=true; m.castShadow=true; g.add(m);
   W.makeSign(g, -6.9, z+9, 'SPEED BREAKER', '#ffd21f', '#1d232b'); return m; };
 W.makeSign = (g, x, z, text, bg, fg, arrow=0)=>{ const s=new T.Group(); s.position.set(x,0,z); g.add(s); mesh(Gcyl(0.07,0.08,3,8), M.pole, 0,1.5,0, s);
   const key=[text,bg,fg,arrow].join('|'), tex=ctex('sign:'+key,320,120,(c,w,h)=>{ c.fillStyle=bg; c.fillRect(0,0,w,h); c.strokeStyle=fg; c.lineWidth=7; c.strokeRect(5,5,w-10,h-10); c.fillStyle=fg; c.textBaseline='middle'; c.textAlign='center';
-    if(arrow){ c.font='900 44px sans-serif'; c.fillText(text, w/2+(arrow<0?28:-28), h/2+3); c.beginPath(); const ax=arrow<0?52:w-52; c.moveTo(ax-arrow*26,h/2-26); c.lineTo(ax+arrow*22,h/2); c.lineTo(ax-arrow*26,h/2+26); c.closePath(); c.fill(); c.fillRect(arrow<0?ax-4:ax-40, h/2-8, 44, 16); }
-    else { c.font='900 38px sans-serif'; c.fillText(text, w/2, h/2+2); } });
+    if(arrow){ fitFont(c,text,44,w-120); c.fillText(text, w/2+(arrow<0?28:-28), h/2+3); c.beginPath(); const ax=arrow<0?52:w-52; c.moveTo(ax-arrow*26,h/2-26); c.lineTo(ax+arrow*22,h/2); c.lineTo(ax-arrow*26,h/2+26); c.closePath(); c.fill(); c.fillRect(arrow<0?ax-4:ax-40, h/2-8, 44, 16); }
+    else { fitFont(c,text,38,w-30); c.fillText(text, w/2, h/2+2); } });
   const bd=new T.Mesh(Gplane(2.2,0.82), Mat('sign:'+key, ()=>new T.MeshLambertMaterial({map:tex, side:T.DoubleSide}))); bd.position.set(0,3.2,0); s.add(bd); return s; };
 // oncoming scooter: the supplied rider art as a camera-facing sprite (like Zippy), with a soft ground shadow
 const riderTex = loadTex(ASSET.rider), RH = 2.5, RW = RH * ASSET.riderAspect;
@@ -379,8 +391,8 @@ W.makeJunction = (g, zJ, side, label)=>{ const j=new T.Group(); g.add(j); const 
   return {closed, sign:sg}; };
 // splash droplets
 W.fx = [];
-const dropGeo = new T.SphereGeometry(0.09,6,5);
-W.splash = (x, z, n=18)=>{ for(let i=0;i<n;i++){ const m=new T.Mesh(dropGeo, new T.MeshBasicMaterial({color:'#d8ecff', transparent:true})); m.position.set(x+(Math.random()-.5)*1.2, 0.1, z+(Math.random()-.5)*0.6); scene.add(m);
+const dropGeo = new T.SphereGeometry(0.11,6,5);
+W.splash = (x, z, n=18)=>{ for(let i=0;i<n;i++){ const m=new T.Mesh(dropGeo, new T.MeshBasicMaterial({color:'#f2f9ff', transparent:true, fog:false})); m.position.set(x+(Math.random()-.5)*1.2, 0.1, z+(Math.random()-.5)*0.6); scene.add(m);
     const v={x:(Math.random()-.5)*4, y:2.5+Math.random()*3.5, z:(Math.random()-.2)*2.5}; let life=0.9;
     W.fx.push(dt=>{ life-=dt; v.y-=14*dt; m.position.x+=v.x*dt; m.position.y+=v.y*dt; m.position.z+=v.z*dt; m.material.opacity=Math.max(0,life/0.9); if(life<=0||m.position.y<0){ scene.remove(m); m.material.dispose(); return false; } return true; }); } };
 
