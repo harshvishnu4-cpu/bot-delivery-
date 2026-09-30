@@ -326,3 +326,16 @@ html,body{height:100%;margin:0;overflow:hidden;background:#6eb6fc;color:var(--te
 .rule.dense ~ .tray .chip{min-height:44px;font-size:20px}
 .rule.dense ~ .tray .chip .ci{width:34px;height:34px}
 .rrow.skip .body .src{visibility:hidden} /* "not checked" takes its place */
+
+/* nudges: arrow that points the way (Learn), glow on the next place to act (Try / Run ready), phase tag in the panel title */
+#nudge{position:absolute;left:0;top:0;width:44px;height:42px;z-index:6;pointer-events:none;opacity:0;transition:left .35s ease,top .35s ease,opacity .25s}
+#nudge.on{opacity:1}
+#nudge svg{display:block;width:100%;height:100%;transform:rotate(90deg);filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));animation:nudgeBob .9s ease-in-out infinite}
+@keyframes nudgeBob{50%{transform:rotate(90deg) translateX(10px)}}
+.nudge-glow{animation:nudgeGlow 1.3s ease-in-out infinite!important}
+@keyframes nudgeGlow{0%,100%{box-shadow:0 0 0 0 rgba(228,30,165,.55)}50%{box-shadow:0 0 0 9px rgba(228,30,165,.35)}}
+.go.nudge-glow{animation:nudgeGlowGo 1.3s ease-in-out infinite!important}
+@keyframes nudgeGlowGo{0%,100%{box-shadow:0 8px 0 #1f7a4b,0 0 0 0 rgba(228,30,165,.55)}50%{box-shadow:0 8px 0 #1f7a4b,0 0 0 10px rgba(228,30,165,.35)}}
+.mode-tag{display:inline-block;margin-left:12px;padding:4px 12px;border-radius:999px;font-size:16px;font-weight:900;letter-spacing:.03em;vertical-align:middle;color:#fff;white-space:nowrap}
+.mode-tag.t-teach{background:var(--blue)} .mode-tag.t-try{background:var(--amber);color:#3a2800} .mode-tag.t-self{background:var(--green)}
+@media (prefers-reduced-motion:reduce){#nudge svg{animation:none}}

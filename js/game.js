@@ -81,72 +81,85 @@ function evaluate(rules, sn){ const checks=[]; for(let i=0;i<rules.length;i++){ 
 
 /* ---------- narration ---------- */
 const L = {
-  intro1: "Namaste! Meet Zippy, a delivery robot. Today Zippy must deliver hot biryani to Mrs. Sharma.",
-  intro2: "Zippy only drives straight. You are its rule designer. It follows your rules exactly.",
-  pred1: "Zippy's steps: forward, forward, forward, stop. But the road has water. What will Zippy do?",
-  pred2: "Let's find out. First, a practice run on an empty, straight street. Press Run.",
-  fix1: "Perfect! On a straight, empty street, Zippy's steps work.",
-  fix2: "Now the real road, with water and a road block. Same steps. Press Run.",
-  fixFail: "Oh no! Zippy slipped on the water and crashed into the road block!",
-  predSafe: "You guessed slow down. But its steps never told it to check the road.",
-  predGo: "You guessed it would keep going straight, and that's exactly what happened.",
-  predBack: "You guessed it would turn back. But its steps only said forward.",
-  fix3: "Straight-only steps won't reach Mrs. Sharma. Let's teach Zippy smarter rules, one at a time.",
-  bcA: ["A rule says: IF a condition is true, THEN do one action. ELSE, do another.", "Build a water rule so Zippy doesn't slip. Then press Run."],
-  bcAh1: "What should Zippy do when there is water on the road?",
-  bcAh2: "Try this: IF water on road, THEN slow down. ELSE, go.",
-  bcAok: "Shabash! One rule handled both the water and the dry road.",
-  bcB: "Road block ahead, and a scooter is coming. Press Run to test your water rule.",
-  bcBfail: ["Crash! Your water rule said go, but a road block was ahead.", "Change lane only if the other lane is clear. AND needs both conditions true."],
-  bcB2: "Build two rules: one to change lane, and one to stop for the scooter.",
-  crashB: "Crash! A road block! If the other lane isn't clear, what should Zippy do?",
-  bcBh1: "Changing lane is safe only when two conditions are true. Which two?",
-  bcBh2: ["Rule 1: IF road block AND other lane clear, THEN change lane.", "Rule 2: IF road block AND scooter coming, THEN stop."],
-  bcBok: "Excellent! With AND, Zippy goes around only when both conditions are true.",
-  ord: ["Zippy checks rules top to bottom. The first rule whose condition is true wins.", "A rule with ELSE always answers, so Zippy stops checking. Put it last.", "Next comes a turn, with water right at it. Order the rules, then press Run."],
-  ordh1: "Water and a turn at the same time. Which rule should Zippy follow first?",
-  ordh2: "Turning on a wet road is slippery. Move the water rule above the turn rule.",
-  ordOk: "Well done! Zippy slowed down first, then turned safely onto the next street.",
-  missedElse: "The ELSE rule answered first, so Zippy never checked the turn rule.",
-  dbg: "These rules have a bug. Watch the run and see which rule Zippy uses.",
-  dbgFail: ["Crash! 'Road is dry' was true too, so the top rule won.", "Zippy never checked for the road block. Can you fix the order?"],
-  dbgh1: "Which matters more: a dry road, or a road block ahead?",
-  dbgh2: "Move the road block rule above the dry road rule.",
-  dbgOk: ["Bug fixed! 'Road is dry' was true even with a block ahead.", "So it fired first. Always check the most important thing first."],
-  fin: ["Last street! Sometimes there's water. Sometimes a speed breaker. One or both means slow down.", "Choose the conditions, the actions, and AND or OR.", "AND and OR are operators: they join two conditions into one."],
-  finh1: "Pick the two conditions Zippy should watch for, then AND or OR.",
-  finh2: "Try: IF water OR speed breaker, THEN slow down. ELSE, go.",
-  finAnd: ["AND needs water and a speed breaker together. Here there was only one!", "Which operator means one or both is enough?"],
+  intro1: ["Namaste! Meet Zippy, a delivery robot.", "Zippy must take hot biryani to Mrs. Sharma."],
+  intro2: "Zippy only drives straight. You will design its rules.",
+  pred1: ["Zippy's steps: forward, forward, forward, stop.", "But the road has water. What will Zippy do?"],
+  pred2: "First, a practice run on an empty street. Press Run.",
+  fix1: "Perfect! On an empty street, the steps work.",
+  fix2: "Now the real road: water and a block. Press Run.",
+  fixFail: "Oh no! Zippy slipped and crashed into the block!",
+  predSafe: "Your guess: slow down. But its steps can't see roads.",
+  predGo: "You guessed it would keep going. That's what happened!",
+  predBack: "You guessed turn back. Its steps only said forward.",
+  fix3: "Straight-only steps won't work. Let's teach Zippy smart rules!",
+  mTeach: "I'll show you how. Follow the arrow.",
+  mTry: "Now you try. I'll give small nudges.",
+  mSelf: "Your turn! Do this one on your own.",
+  nIf: "IF needs a condition. What does Zippy see?",
+  nThen: "THEN is the action when it's true.",
+  nElse: "ELSE is the action when it's not true.",
+  nRun: "Your rule is ready. Press Run!",
+  nArrows: "Use the arrows to move a rule up or down.",
+  bcA: ["A rule says: IF a condition is true, THEN act.", "ELSE means otherwise. Build a water rule!"],
+  bcAh1: "What should Zippy do when there's water?",
+  bcAh2: "Try: IF water on road, THEN slow down. ELSE, go.",
+  bcAok: "Shabash! One rule handled water and dry road.",
+  bcB: "Block and scooter ahead! Press Run to test your rule.",
+  bcBfail: ["Crash! Your water rule said go at the block.", "Change lane only if the other lane is clear.", "AND needs both conditions true."],
+  bcB2: "Build two rules: change lane, and stop for scooters.",
+  crashB: "Crash! If the other lane isn't clear, what then?",
+  bcBh1: "Changing lane needs two true conditions. Which two?",
+  bcBh2: ["Rule 1: block AND lane clear, THEN change lane.", "Rule 2: block AND scooter coming, THEN stop."],
+  bcBok: "Excellent! AND means both conditions must be true.",
+  ord: ["Zippy checks rules from top to bottom.", "The first rule that's true wins.", "A rule with ELSE always answers. Put it last.", "Water is at the next turn. Order the rules!"],
+  ordh1: "Water and a turn together. Which rule goes first?",
+  ordh2: "Wet turns are slippery. Put the water rule above turn.",
+  ordOk: "Well done! Zippy slowed down, then turned safely.",
+  missedElse: "The ELSE rule answered before the turn rule.",
+  dbg: "These rules have a bug. Watch which rule Zippy uses.",
+  dbgFail: ["Crash! 'Road is dry' was true, so it won.", "Zippy never checked for the block. Fix the order!"],
+  dbgh1: "Which matters more: a dry road, or a block?",
+  dbgh2: "Move the road block rule above the dry rule.",
+  dbgOk: ["Bug fixed! 'Road is dry' was true near the block.", "Always check the most important thing first."],
+  fin: ["Last street! Water, a speed breaker, or both: slow down.", "Choose conditions, actions, and AND or OR.", "AND and OR are operators. They join conditions."],
+  finh1: "Pick two conditions to watch, then AND or OR.",
+  finh2: "Try: IF water OR speed breaker, THEN slow. ELSE, go.",
+  finAnd: ["AND needs water and speed breaker together.", "Here there was only one! Which operator fits?"],
   finOk: "Brilliant! OR means one or both is enough.",
-  run: ["The real delivery! Three streets, two turns, and Mrs. Sharma is waiting.", "Zippy will use all your rules. Press Start and watch every decision."],
+  run: ["The real delivery! Mrs. Sharma is waiting.", "Zippy will use all your rules. Press Start!"],
   runOk: "Delivered! Mrs. Sharma got her biryani, hot and safe.",
-  done: "Zippy delivered the biryani! Mrs. Sharma says thank you, rule designer!",
-  chk: ["One last check! A new street has a school zone and kids crossing.", "Zippy must slow down if one or both are there. Which rule works?"],
-  chkOk: "Yes! Zippy slows down for the school zone, the kids, or both.",
-  chkAnd: "With AND, a school zone alone isn't enough. Zippy would drive past fast!",
-  chkFlip: "This rule goes fast in the school zone, and slows on empty roads!",
-  chkShow: "This one works: OR means one or both is enough.",
-  empty: "There's an empty space in the rule. Fill every space, then press Run.",
-  slip: "Zippy slipped! What does your rule say to do when there's water?",
-  slipTurn: "Zippy slipped turning on the wet road! The first true rule wins. Which matters more?",
-  crash: "Crash! There was a road block, and Zippy's rule said go.",
-  scooter: "Safety stop! A scooter was coming. Change lane only when the other lane is clear.",
-  bump: "Bump! The biryani nearly flew out! What should Zippy do at a speed breaker?",
-  missed: "Zippy missed the turn and hit a closed road! When the road turns, turn too.",
-  stuck: "Nothing was ahead, but Zippy waited! What should your rule say when it's safe?",
-  norule: "No rule's condition was true, so Zippy didn't know what to do."
+  done: "Mrs. Sharma says thank you, rule designer!",
+  chk: ["One last check! A school zone and kids crossing.", "Slow down for one or both. Which rule works?"],
+  chkOk: "Yes! Zippy slows for the school, the kids, or both.",
+  chkAnd: "With AND, a school zone alone isn't enough!",
+  chkFlip: "This rule goes fast near the school. Unsafe!",
+  chkShow: "This one works: OR means one or both.",
+  empty: "A space is empty. Fill every space, then Run.",
+  slip: "Zippy slipped! What should your rule do for water?",
+  slipTurn: "Slipped on the wet turn! The first true rule wins.",
+  crash: "Crash! Your rule told Zippy to go at a block.",
+  scooter: "Safety stop! Change lane only when the lane is clear.",
+  bump: "Bump! The biryani nearly flew out! What should Zippy do?",
+  missed: "Zippy missed the turn! When the road turns, turn too.",
+  stuck: "Nothing was ahead, but Zippy waited! What should it do?",
+  norule: "No rule was true, so Zippy got confused."
 };
 
 /* ---------- audio: sfx (Web Audio, generated) ---------- */
 const A = { ctx:null, muted:false, master:null };
-function audioInit(){ if(A.ctx) return; try{ A.ctx = new (window.AudioContext||window.webkitAudioContext)(); A.master = A.ctx.createGain(); A.master.gain.value = 0.55; A.master.connect(A.ctx.destination); engineInit(); }catch(e){} }
+const MASTER = 0.5;
+function audioInit(){ if(A.ctx) return; try{ A.ctx = new (window.AudioContext||window.webkitAudioContext)(); A.master = A.ctx.createGain(); A.master.gain.value = A.muted ? 0 : MASTER; A.master.connect(A.ctx.destination); engineInit(); }catch(e){} }
+// fades instead of jumps, so muting or pausing never clicks
+function audioFade(on){ if(!A.ctx) return; const g = A.master.gain, t = A.ctx.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.setTargetAtTime(on ? MASTER : 0, t, 0.03); }
+// browsers can suspend audio (tab switch, power saving); wake it on the next tap unless the game is paused
+['pointerdown','keydown'].forEach(ev=>addEventListener(ev, ()=>{ if(A.ctx && A.ctx.state==='suspended' && !paused) A.ctx.resume().catch(()=>{}); }, true));
 function tone(f, d, type='sine', v=0.25, when=0, slide=null){ if(!A.ctx||A.muted) return; const t=A.ctx.currentTime+when; const o=A.ctx.createOscillator(), g=A.ctx.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); if(slide) o.frequency.exponentialRampToValueAtTime(slide, t+d);
   g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(v,t+0.015); g.gain.exponentialRampToValueAtTime(0.0001,t+d); o.connect(g); g.connect(A.master); o.start(t); o.stop(t+d+0.05); }
 function noise(d, v=0.2, freq=900){ if(!A.ctx||A.muted) return; const b=A.ctx.createBuffer(1, A.ctx.sampleRate*d, A.ctx.sampleRate), ch=b.getChannelData(0); for(let i=0;i<ch.length;i++) ch[i]=(Math.random()*2-1)*(1-i/ch.length);
   const s=A.ctx.createBufferSource(); s.buffer=b; const f=A.ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=freq; const g=A.ctx.createGain(); g.gain.value=v; s.connect(f); f.connect(g); g.connect(A.master); s.start(); }
 const SFX = {
   tap(){ tone(660,0.06,'triangle',0.15); }, place(){ tone(520,0.07,'triangle',0.2); tone(880,0.09,'triangle',0.16,0.05); },
-  remove(){ tone(420,0.08,'triangle',0.15,0,260); }, bad(){ tone(220,0.16,'square',0.08); tone(180,0.2,'square',0.08,0.13); },
+  remove(){ tone(420,0.08,'triangle',0.15,0,260); }, bad(){ tone(330,0.14,'triangle',0.13); tone(247,0.22,'triangle',0.12,0.11); },
   ok(){ [523,659,784,1047].forEach((f,i)=>tone(f,0.22,'triangle',0.18,i*0.09)); },
   whistle(){ tone(2100,0.14,'sine',0.14); tone(2300,0.3,'sine',0.14,0.16); noise(0.25,0.15,600); },
   brake(){ noise(0.45,0.25,1800); }, horn(){ tone(392,0.28,'square',0.07); tone(494,0.28,'square',0.06); },
@@ -160,7 +173,11 @@ function sirenOn(){ if(!A.ctx||siren) return; const o=A.ctx.createOscillator(), 
 function sirenOff(){ if(!siren) return; try{ siren.o.stop(); siren.l.stop(); }catch(e){} siren=null; }
 let eng=null;
 function engineInit(){ const o=A.ctx.createOscillator(), f=A.ctx.createBiquadFilter(), g=A.ctx.createGain(); o.type='sawtooth'; o.frequency.value=60; f.type='lowpass'; f.frequency.value=300; g.gain.value=0; o.connect(f); f.connect(g); g.connect(A.master); o.start(); eng={o,g}; }
-function engineUpd(){ if(!eng) return; const v=W.Z.v; eng.o.frequency.value = 55 + v*9; eng.g.gain.value = A.muted||paused||document.body.classList.contains('video-on') ? 0 : 0.012 + Math.min(v,14)*0.0028; }
+let engT = 0;
+function engineUpd(){ if(!eng || !A.ctx || (engT = (engT+1)%6)) return; const v=W.Z.v, t=A.ctx.currentTime;
+  const on = !A.muted && !paused && !document.body.classList.contains('video-on') && v > 0.3;
+  eng.o.frequency.setTargetAtTime(55 + v*9, t, 0.08);
+  eng.g.gain.setTargetAtTime(on ? (0.008 + Math.min(v,14)*0.0022) * (SP.done ? 1 : 0.4) : 0, t, 0.12); }
 
 /* ---------- time + cancellable coroutines ---------- */
 let gt = 0, paused = false, epoch = 0; const CANCEL = {cancel:true};
@@ -175,6 +192,7 @@ const SP = { voice:null, cur:null, done:true, last:'', captions:true, token:0, g
 // voiceover clips (ElevenLabs voice "Chutki", id Jr72SE8p9OcJmr8hyX0D): assets/audio/vo/<key>.mp3, or <key>_<n>.mp3 for multi-box lines.
 // If you edit a line in L, regenerate its clip too, or the caption and the voice won't match.
 const VO = new Map(); for(const [k,v] of Object.entries(L)) [].concat(v).forEach((t,i,a)=>VO.set(t, `assets/audio/vo/${a.length>1 ? k+'_'+(i+1) : k}.mp3`));
+const VOICE_EL = new Audio(); VOICE_EL.preload = 'auto';
 function stopAudio(){ const a=SP.audio; if(a){ a.onended=a.onerror=null; a.pause(); SP.audio=null; } }
 function pickVoice(){ const vs = (window.speechSynthesis && speechSynthesis.getVoices()) || []; if(!vs.length) return null;
   return vs.find(v=>/en[-_]IN/i.test(v.lang)&&v.localService) || vs.find(v=>/en[-_]IN/i.test(v.lang)) || vs.find(v=>/india|heera|ravi|rishi|veena|neel|prabhat|kajal/i.test(v.name)) || vs.find(v=>/^en/i.test(v.lang)&&v.localService) || vs.find(v=>/^en/i.test(v.lang)) || null; }
@@ -190,7 +208,7 @@ function sayOne(text, last){
   stopAudio(); try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
   const src = VO.get(text);
   if(src){ // recorded voice; muted clips still play silently so the caption keeps the same timing
-    const a = new Audio(src); a.muted = A.muted; SP.audio = a; spoke = true;
+    const a = VOICE_EL; a.src = src; a.muted = A.muted; SP.audio = a; spoke = true;
     a.onended = ()=>{ if(tok===SP.token) ended = true; }; a.onerror = ()=>{ if(tok===SP.token) spoke = false; }; // missing file: fall back to timing
     const p = a.play(); if(p && p.catch) p.catch(err=>{ if(tok===SP.token && !(err && err.name==='AbortError')) spoke = false; }); if(paused) a.pause(); }
   else try{ if(window.speechSynthesis && !A.muted && speechSynthesis.getVoices().length){ const u = new SpeechSynthesisUtterance(text); if(SP.voice) u.voice = SP.voice; u.lang = 'en-IN'; u.rate = 0.98; u.pitch = 1.05;
@@ -216,8 +234,8 @@ const FX = window.gsap ? {
 
 /* ---------- ui helpers ---------- */
 const panel = $('#panel');
-function setPanel(html){ panel.innerHTML = html; panel.classList.remove('out'); W.cam.shiftTarget = 0.16; }
-function hidePanel(){ panel.classList.add('out'); W.cam.shiftTarget = 0; }
+function setPanel(html){ nudgeStop(); panel.innerHTML = html; panel.classList.remove('out'); W.cam.shiftTarget = 0.16; }
+function hidePanel(){ nudgeStop(); panel.classList.add('out'); W.cam.shiftTarget = 0; }
 function head(icon, title, sub){ return `<div class="ph-head"><div class="ic">${IC[icon]}</div><div><h2>${title}</h2>${sub?`<small>${sub}</small>`:''}</div></div>`; }
 function toast(kind, text){ const col = kind==='ok'?'#2FA66A':kind==='warn'?'#F2A93B':'#E76D5B'; const ic = kind==='ok'?IC.check:kind==='warn'?IC.horn:IC.alert;
   $('#toast').innerHTML = `<div class="t"><div class="ci" style="background:${col}">${ic}</div>${text}</div>`; $('#toast').classList.remove('hide'); FX.pop('#toast .t'); bubble(null); }
@@ -259,6 +277,38 @@ function poke(){ H.last = gt; }
 function hintTick(){ if(!H.list || paused) return; if(!SP.done && !H.force){ H.last = gt; return; } // never cut into narration; idle time counts from when it ends
   if((H.force || gt - H.last >= 12) && H.idx < H.list.length){ H.force = false; const t=H.list[H.idx++]; H.last=gt; syncHint(); if(H.el){ H.el.innerHTML = `<div class="hint">${IC.bulb}<span>${[].concat(t).join(' ')}</span></div>`; } say(t); } }
 
+/* ---------- nudges: Learn with me (arrow shows the way) → Try with help (the next space glows) → On your own (none) ---------- */
+const NUDGE = { mode:null, answers:null, key:null, since:0, said:new Set(), glow:null, mvUntil:null };
+const MODE_TAG = { teach:['Learn with me','t-teach'], try:['Try with help','t-try'], self:['On your own','t-self'] };
+const NUDGE_LINE = { c1:'nIf', then:'nThen', else:'nElse' };
+function nudgeStart(mode, answers){ nudgeStop(); Object.assign(NUDGE, { mode, answers:answers||null, key:null, since:gt, said:new Set(), mvUntil:null });
+  const h = panel.querySelector('.ph-head h2'); if(h && !h.querySelector('.mode-tag')) h.insertAdjacentHTML('beforeend', `<span class="mode-tag ${MODE_TAG[mode][1]}">${MODE_TAG[mode][0]}</span>`); }
+function nudgeStop(){ NUDGE.mode = null; nudgeGlow(null); nudgePoint(null); }
+function nudgeGlow(el){ if(NUDGE.glow && NUDGE.glow!==el) NUDGE.glow.classList.remove('nudge-glow'); NUDGE.glow = el; if(el) el.classList.add('nudge-glow'); }
+function nudgePoint(el){ const n = $('#nudge'); if(!el){ n.classList.remove('on'); return; }
+  const r = el.getBoundingClientRect(), sr = stage.getBoundingClientRect(), k = sr.width/1920;
+  n.style.left = ((r.left + r.width/2 - sr.left)/k - 22)+'px'; n.style.top = ((r.bottom - sr.top)/k - 4)+'px'; n.classList.add('on'); } // just under the target, pointing up
+function nudgeTick(){
+  if(!NUDGE.mode || panel.classList.contains('out')){ nudgeGlow(null); nudgePoint(null); return; }
+  const run = panel.querySelector('#run'), tray = panel.querySelector('.tray'), list = panel.querySelector('.rlist');
+  const editing = run && !run.disabled && (!tray || !tray.classList.contains('gone'));
+  if(!editing || !SP.done){ nudgeGlow(null); nudgePoint(null); return; } // nothing to do yet, or Zippy is talking
+  const empty = tray ? panel.querySelector('.rule .slot:not(.full)') : null, movable = list && list.querySelector('.rrow:not(.locked) .mv');
+  const key = empty ? empty.dataset.key : 'run'; if(key!==NUDGE.key){ NUDGE.key = key; NUDGE.since = gt; }
+  const idle = gt - Math.max(NUDGE.since, H.last);
+  if(NUDGE.mode==='teach'){ // say what the space is for; if the child waits, point at the tile that fits
+    const line = empty ? L[NUDGE_LINE[empty.dataset.role]] : tray ? L.nRun : null;
+    if(line && !NUDGE.said.has(key)){ NUDGE.said.add(key); say(line); return; }
+    const ans = empty && NUDGE.answers && NUDGE.answers[key];
+    const tile = ans && idle > 6 ? panel.querySelector(`.tile[data-kind="${empty.dataset.accept}"][data-val="${ans}"]`) : null;
+    nudgePoint(tile || empty || run); nudgeGlow(empty ? null : run);
+  } else if(NUDGE.mode==='try'){ // no arrow on the answer: only where to act next
+    if(movable){ if(!NUDGE.said.has('mv')){ NUDGE.said.add('mv'); say(L.nArrows); return; } if(NUDGE.mvUntil==null) NUDGE.mvUntil = gt + 5;
+      nudgePoint(gt < NUDGE.mvUntil ? movable : null); nudgeGlow(null); return; }
+    nudgePoint(null); nudgeGlow(empty || run);
+  } else { nudgePoint(null); nudgeGlow(tray ? (empty ? null : run) : (movable ? null : run)); } // on your own: only a ready Run button
+}
+
 /* ---------- progress ---------- */
 const STEPS = [['PREDICTION','Predict','Q'],['FIXED_ROUTE_TEST','Test','flag'],['BUILD_CONDITIONAL','Build','build'],['ORDER_RULES','Order','list'],['DEBUG_PRIORITY','Debug','wrench'],['BUILD_FINAL_RULE','Create','build'],['FINAL_RUN','Deliver','parcel']];
 function renderProg(cur){ const idx = STEPS.findIndex(st=>st[0]===cur), done = cur==='COMPLETE', n = done ? STEPS.length : Math.max(0, idx);
@@ -279,7 +329,7 @@ const CP_TYPES = {
   waterBump:{water:1, bump:1, phases:[{water:1, bump:1},{}]} // both at once: OR must fire on both
 };
 let course = null; let liveProps = [];
-function disposeGroup(g){ if(!g) return; W.scene.remove(g); (g.userData.carves||[]).forEach(t=>W.uncarve(t)); g.userData.carves=[]; }
+function disposeGroup(g){ if(!g) return; W.scene.remove(g); (g.userData.carves||[]).forEach(t=>W.uncarve(t)); g.userData.carves=[]; W.disposeObject(g); } // frees its geometry, materials and textures
 function clearCourse(c){ if(c && c.group){ disposeGroup(c.group); } }
 const oldGroups = [];
 function buildCourse(types, startZ, opts={}){
@@ -298,6 +348,7 @@ function buildCourse(types, startZ, opts={}){
   }
   if(opts.finish){ W.makeFinishLine(g, endZ - 2); c.flag = W.makeFlag(g, -6.7, endZ - 2, '#F2A93B'); }
   if(opts.house){ c.house = W.makeHouse(g, endZ - 4); c.flag = W.makeFlag(g, -7.0, endZ + 3, '#2FA66A'); c.sharma = W.makePerson(g, -8.2, endZ - 4, '#d94f8a'); c.sharma.rotation.y = -Math.PI/2; }
+  W.warm(g);
   return c;
 }
 function propsTick(dt){
@@ -329,7 +380,7 @@ function spawnBehind(kind, lane){
     if(o.position.z < Z.z - 140){ v.gone = true; } };
   liveProps.push(v); mirrorOn++; if(kind==='amb') sirenOn(); return v;
 }
-function dropBehind(v){ const i=liveProps.indexOf(v); if(i>=0) liveProps.splice(i,1); if(v.obj.parent) v.obj.parent.remove(v.obj); mirrorOn=Math.max(0,mirrorOn-1); if(v.kind==='amb') sirenOff(); }
+function dropBehind(v){ const i=liveProps.indexOf(v); if(i>=0) liveProps.splice(i,1); if(v.obj.parent) v.obj.parent.remove(v.obj); W.disposeObject(v.obj); mirrorOn=Math.max(0,mirrorOn-1); if(v.kind==='amb') sirenOff(); }
 function clearVehicles(){ for(const v of liveProps.slice()) dropBehind(v); liveProps.length=0; mirrorOn=0; sirenOff(); }
 
 /* ---------- motion helpers ---------- */
@@ -592,14 +643,14 @@ async function runFixed(c, testDay){
 async function FIXED_ROUTE_TEST(){
   setState('FIXED_ROUTE_TEST', 0);
   { const off = await flash(); clearCourse(course); course = buildCourse(['practice'], 0, {finish:true}); W.placeZippy(0); W.snapCamera(); await wait(0.1); off(); }
-  setPanel(head('flag','Practice run','Empty, straight street') + fixedStepsHTML() + `<div class="btnrow"><button class="go" id="run">${IC.play}Run</button></div>`);
+  setPanel(head('flag','Practice run','Empty, straight street') + fixedStepsHTML() + `<div class="btnrow"><button class="go" id="run">${IC.play}Run</button></div>`); nudgeStart('teach');
   say(L.pred2);
   await clickOnce($('#run')); SFX.tap(); $('#run').disabled=true; stopSpeech(); clearCaption();
   hud({}); await runFixed(course, false); hud(null);
   toast('ok','Practice passed'); SFX.ok(); await say(L.fix1); hideToast();
   // delivery day: the real road
   { const off = await flash(); clearCourse(course); course = buildCourse(['fixedDelivery'], 0, {finish:true}); W.placeZippy(0); W.snapCamera(); await wait(0.1); off(); }
-  setPanel(head('parcel','Delivery run','The real road') + fixedStepsHTML() + `<div class="btnrow"><button class="go" id="run">${IC.play}Run</button></div>`);
+  setPanel(head('parcel','Delivery run','The real road') + fixedStepsHTML() + `<div class="btnrow"><button class="go" id="run">${IC.play}Run</button></div>`); nudgeStart('teach');
   say(L.fix2);
   await clickOnce($('#run')); SFX.tap(); $('#run').disabled=true; stopSpeech(); clearCaption();
   hud({water:1, block:1}); await runFixed(course, true); bubble('Q'); toast('bad','Crash!'); SFX.bad();
@@ -632,8 +683,8 @@ async function BUILD_CONDITIONAL(startZ){
   let c = course = buildCourse(['water','dry'], startZ);
   const bA = builder({ rows:ROWS3, conds:['water','dry'], acts:['SLOW','GO'] });
   setPanel(head('build','Water rule','IF · THEN · ELSE') + bA.html + `<div class="btnrow"><button class="go" id="run">${IC.play}Run</button></div><div id="hint"></div>`);
-  bA.bind(panel); traceUI = {kind:'single', root:panel};
-  say(L.bcA);
+  bA.bind(panel); traceUI = {kind:'single', root:panel}; nudgeStart('teach', {c1:'water', then:'SLOW', else:'GO'});
+  say([L.mTeach, ...L.bcA]);
   const rA = await builderLoop({c, b:bA, hints:[L.bcAh1, L.bcAh2], ctx:'A', okLine:L.bcAok});
   G.ruleA = rA.rule; saveProgress(startZ);
   // Part B: road block + scooter -> AND
@@ -642,7 +693,7 @@ async function BUILD_CONDITIONAL(startZ){
   c = course = buildCourse(['blockScooter','block'], startB);
   const lockedA = builder({ rows:ROWS3, conds:['water','dry'], acts:['SLOW','GO'], prefill:{c1:G.ruleA.c1, then:G.ruleA.then, else:G.ruleA.else} });
   setPanel(head('build','New problem','Same rule, new road') + lockedA.html + `<div class="btnrow"><button class="go" id="run">${IC.play}Run</button></div>`);
-  lockedA.bind(panel); lockedA.setEditable(false); traceUI = {kind:'single', root:panel};
+  lockedA.bind(panel); lockedA.setEditable(false); traceUI = {kind:'single', root:panel}; nudgeStart('teach');
   say(L.bcB); await clickOnce($('#run')); SFX.tap(); $('#run').disabled=true; stopSpeech(); clearCaption();
   let res = await runCourse(c, [G.ruleA]);
   failToast(res); SFX.bad(); await say(res.reason==='crash' ? L.bcBfail : failLine(res,'B')); hideToast(); hud(null); bubble(null); clearVehicles();
@@ -653,7 +704,7 @@ async function BUILD_CONDITIONAL(startZ){
     conds:['block','laneClear','scooter','water'], acts:['CHANGE','STOP','GO'], prefill:{c1:'block', then:'CHANGE', r2c1:'block'} });
   setPanel(head('build','Road block rules','Two rules · IF · AND · THEN') + bB.html + `<div class="btnrow"><button class="go" id="run">${IC.replay}Run again</button></div><div id="hint"></div>`);
   bB.bind(panel); traceUI = {kind:'single', root:panel};
-  c = await rewind(c); say(L.bcB2);
+  c = await rewind(c); nudgeStart('try'); say([L.mTry, L.bcB2]);
   const rB = await builderLoop({c, b:bB, hints:[L.bcBh1, L.bcBh2], ctx:'B', okLine:L.bcBok});
   G.ruleB = rB.rule; saveProgress(startZ);
   await cta('Next problem');
@@ -678,8 +729,8 @@ async function ORDER_RULES(startZ){
   const rules = [ {c1:'turn', then:'TURN'}, {c1:'clear', then:'GO', else:'SLOW'}, {c1:'water', then:'SLOW'} ]; // correct: water, turn, then the ELSE rule last
   const list = ruleList(rules, false);
   setPanel(head('list','Order the rules','Zippy checks from the top') + `<div class="order-note">${IC.down}First true rule wins · a rule with ELSE always answers</div>` + list.html + `<div class="btnrow"><button class="go" id="run">${IC.play}Run</button></div><div id="hint"></div>`);
-  list.bind(panel); traceUI = {kind:'list', root:panel};
-  say(L.ord);
+  list.bind(panel); traceUI = {kind:'list', root:panel}; nudgeStart('try');
+  say([L.mTry, ...L.ord]);
   const r = await listLoop({c, list, hints:[L.ordh1, L.ordh2], ctx:'ORD', okLine:L.ordOk});
   G.order = list.rules.slice(); saveProgress(startZ);
   await cta('Next street');
@@ -692,9 +743,9 @@ async function DEBUG_PRIORITY(startZ){
   const list = ruleList([ {c1:'dry', then:'GO'}, {c1:'water', then:'SLOW'}, {c1:'block', op:'AND', c2:'laneClear', then:'CHANGE'} ], true);
   setPanel(head('wrench','Street rules','Something is wrong') + `<div class="order-note">${IC.down}First true rule wins · a rule with ELSE always answers</div>` + list.html + `<div class="btnrow"><button class="go" id="run">${IC.eye}Watch run</button></div><div id="hint"></div>`);
   list.bind(panel); traceUI = {kind:'list', root:panel};
-  say(L.dbg); await clickOnce($('#run')); SFX.tap(); $('#run').disabled=true; stopSpeech(); clearCaption();
+  nudgeStart('self'); say([L.mSelf, L.dbg]); await clickOnce($('#run')); SFX.tap(); $('#run').disabled=true; stopSpeech(); clearCaption();
   const res = await runCourse(c, list.rules); failToast(res); SFX.bad(); await say(L.dbgFail); hideToast(); hud(null); bubble(null);
-  $('.ph-head h2').textContent = 'Fix the bug'; $('.ph-head small').textContent = 'Change the order';
+  $('.ph-head h2').textContent = 'Fix the bug'; $('.ph-head small').textContent = 'Change the order'; nudgeStart('self');
   $('#run').innerHTML = `${IC.replay}Run again`;
   const r = await listLoop({c, list, hints:[L.dbgh1, L.dbgh2], ctx:'DBG', okLine:L.dbgOk, first:false});
   G.debug = list.rules.slice(); saveProgress(startZ);
@@ -708,8 +759,8 @@ async function BUILD_FINAL_RULE(startZ){
   const b = builder({ rows:[{kw:'IF',kwClass:'kw-if',key:'c1',accept:'cond'},{kwSlot:'k2',key:'c2',accept:'cond'},{kw:'THEN',kwClass:'kw-then',key:'then',accept:'act'},{kw:'ELSE',kwClass:'kw-else',key:'else',accept:'act'}],
     kws:['AND','OR'], conds:['water','bump','dry','laneClear'], acts:['SLOW','GO'] });
   setPanel(head('build','Build it yourself','Your conditions, actions and operator') + b.html + `<div class="btnrow"><button class="go" id="run">${IC.play}Run</button></div><div id="hint"></div>`);
-  b.bind(panel); traceUI = {kind:'single', root:panel};
-  say(L.fin);
+  b.bind(panel); traceUI = {kind:'single', root:panel}; nudgeStart('self');
+  say([L.mSelf, ...L.fin]);
   const r = await builderLoop({c, b, hints:[L.finh1, L.finh2], ctx:'FIN', okLine:L.finOk});
   G.finalRule = r.rule; saveProgress(startZ);
   await cta('Deliver now');
@@ -734,7 +785,7 @@ async function FINAL_RUN(startZ){
   const list = ruleList(rules, true);
   setPanel(head('parcel','Zippy\'s rulebook','Your rules, in your order') + list.html + `<div class="btnrow"><button class="go" id="run">${IC.play}Start</button></div>`);
   list.bind(panel); traceUI = {kind:'list', root:panel};
-  panel.querySelector('#rlist').classList.add('compact');
+  panel.querySelector('#rlist').classList.add('compact'); nudgeStart('self');
   say(L.run); await clickOnce($('#run')); SFX.tap(); $('#run').disabled=true; stopSpeech(); clearCaption();
   const res = await runCourse(c, rules);
   if(!res.ok){
@@ -790,7 +841,7 @@ function confetti(){ const cv=$('#confetti'), g=cv.getContext('2d'); const cols=
 
 /* ---------- activity runner (restartable) ---------- */
 let restartFn = null;
-function launch(fn, ...args){ epoch++; waiters.length = 0; H.prev = null; restartFn = ()=>launch(fn, ...args); hintsOff(); hideToast(); bubble(null); hud(null); clearVehicles(); stopSpeech(); clearCaption();
+function launch(fn, ...args){ epoch++; waiters.length = 0; H.prev = null; nudgeStop(); restartFn = ()=>launch(fn, ...args); hintsOff(); hideToast(); bubble(null); hud(null); clearVehicles(); stopSpeech(); clearCaption();
   Promise.resolve().then(()=>fn(...args)).catch(e=>{ if(e!==CANCEL) console.error(e); }); }
 const SNAP = {};
 const acts = { PREDICTION, FIXED_ROUTE_TEST, BUILD_CONDITIONAL, ORDER_RULES, DEBUG_PRIORITY, BUILD_FINAL_RULE, FINAL_RUN };
@@ -803,10 +854,10 @@ function restartCurrent(){ const s = state; if(s==='COMPLETE') return;
 function syncCtl(){ $('#skSound').classList.toggle('off', A.muted); $('#skMute span').innerHTML = A.muted ? 'Unmute All<br>Sounds' : 'Mute All<br>Sounds'; $('#cap').classList.toggle('muteCap', !SP.captions);
   $('#pResume').innerHTML = `${IC.play}Resume`; $('#pRestart').innerHTML = `${IC.restart}Restart this part`; $('#pStory').innerHTML = `${IC.play}Watch Zippy's story`;
   $('#pCap').innerHTML = `${IC.cc}Captions<span class="st">${SP.captions?'On':'Off'}</span>`; $('#pMute').innerHTML = `${A.muted?IC.mute:IC.snd}Sound<span class="st">${A.muted?'Off':'On'}</span>`; }
-function toggleMute(){ A.muted=!A.muted; if(SP.audio) SP.audio.muted=A.muted; if(A.muted){ try{speechSynthesis.cancel();}catch(e){} if(siren) siren.g.gain.value=0; } else if(siren) siren.g.gain.value=0.05; syncCtl(); }
+function toggleMute(){ A.muted=!A.muted; VOICE_EL.muted=A.muted; audioFade(!A.muted); if(A.muted){ try{speechSynthesis.cancel();}catch(e){} } syncCtl(); }
 function toggleCap(){ SP.captions=!SP.captions; syncCtl(); }
 function replay(){ if(SP.last) say(SP.last); }
-function setPause(p){ if(state==='TITLE') return; paused=p; $('#pause').classList.toggle('hide', !p); try{ p?speechSynthesis.pause():speechSynthesis.resume(); }catch(e){} if(SP.audio){ if(p) SP.audio.pause(); else SP.audio.play().catch(()=>{}); } if(siren) siren.g.gain.value = (p||A.muted)?0:0.05; if(p) setTimeout(()=>$('#pResume').focus({preventScroll:true}),30); }
+function setPause(p){ if(state==='TITLE') return; paused=p; $('#pause').classList.toggle('hide', !p); try{ p?speechSynthesis.pause():speechSynthesis.resume(); }catch(e){} if(SP.audio){ if(p) SP.audio.pause(); else SP.audio.play().catch(()=>{}); } if(A.ctx){ (p ? A.ctx.suspend() : A.ctx.resume()).catch(()=>{}); } if(p) setTimeout(()=>$('#pResume').focus({preventScroll:true}),30); }
 const skMenu = $('#skMenu');
 function menuOpen(o){ skMenu.classList.toggle('hide', !o); $('#skSound').setAttribute('aria-expanded', String(o)); }
 $('#skSound').onclick=()=>{ SFX.tap(); menuOpen(skMenu.classList.contains('hide')); };
@@ -834,7 +885,7 @@ addEventListener('keydown', e=>{ if(state==='TITLE' || HookVideo.open) return; c
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden && state!=='TITLE' && !paused && !HookVideo.open) setPause(true); });
 
 /* ---------- title ---------- */
-$('#titleBg').style.backgroundImage = `url(${ASSET.titleThumbnail})`; $('#doneBot').src = ASSET.zippyImg;
+$('#titleBg').style.backgroundImage = `url(${ASSET.titleThumbnail})`; $('#doneBot').src = ASSET.zippyImg; try{ $('#doneBot').decode().catch(()=>{}); }catch(e){} // decode now, not when the results card first appears
 W.cam.mode = 'title'; W.placeZippy(0);
 if(!RESUME_SAVED_PROGRESS) clearProgress(); // drop anything saved by an older version
 const savedProgress = RESUME_SAVED_PROGRESS ? loadProgress() : null;
@@ -879,18 +930,28 @@ syncCtl(); renderProg('PREDICTION');
 function layout(){ const w=innerWidth, h=innerHeight; const k=Math.min(w/1920, h/1080); stage.style.transform = `translate(${(w-1920*k)/2}px, ${(h-1080*k)/2}px) scale(${k})`;
   stage.style.setProperty('--bx', Math.ceil((w/k-1920)/2)+'px'); stage.style.setProperty('--by', Math.ceil((h/k-1080)/2)+'px'); W.resize(w,h); }
 addEventListener('resize', layout); layout();
+W.prewarm(); // behind the title screen
 let lastT = performance.now();
+const bubbleEl = $('#bubble'), mirrorEl = $('#mirror');
+// if frames are slow for about 2 s of play, step quality down (sharpness, then shadow detail); never steps back up mid-game
+const perf = { t:[], last:performance.now() };
+function watchPerf(now){ const d = now - perf.last; perf.last = now;
+  if(paused || document.hidden || state==='TITLE' || document.body.classList.contains('video-on') || d > 250){ perf.t.length = 0; return; }
+  perf.t.push(d); if(perf.t.length < 120) return;
+  const med = perf.t.slice().sort((a,b)=>a-b)[60]; perf.t.length = 0;
+  if(med > 20 && W.canLower()) W.setQuality(W.quality + 1); }
 function loop(now){
   const raw = Math.min(0.05, (now-lastT)/1000); lastT = now;
   const dt = paused ? 0 : raw;
-  if(!paused){ gt += dt; pumpWaiters(); propsTick(dt); hintTick(); timer.tick(); }
-  engineUpd();
-  // bubble follows Zippy
-  const bb = $('#bubble'); if(!bb.classList.contains('hide')){ const p = W.project(W.Z.x, W.ZH+0.45, W.Z.z); const r=stage.getBoundingClientRect(); const k=r.width/1920; const w=innerWidth, h=innerHeight; const off = W.cam.shift*w;
-    bb.style.left = (((p.x*0.5+0.5)*w - r.left)/k)+'px'; bb.style.top = (((-p.y*0.5+0.5)*h - r.top)/k)+'px'; }
-  let mirror = null; const me=$('#mirror'); const showM = mirrorOn>0; me.classList.toggle('hide', !showM);
-  if(showM){ const r=stage.getBoundingClientRect(), k=r.width/1920; mirror = {x:Math.round(r.left + 1068*k), y:Math.round(r.top + 138*k), w:Math.round(404*k), h:Math.round(154*k)}; }
+  if(!paused){ gt += dt; pumpWaiters(); propsTick(dt); hintTick(); timer.tick(); nudgeTick(); }
+  engineUpd(); watchPerf(now);
+  let mirror = null; const showM = mirrorOn>0; mirrorEl.classList.toggle('hide', !showM);
+  const r = stage.getBoundingClientRect(), k = r.width/1920;
+  if(showM) mirror = {x:Math.round(r.left + 1068*k), y:Math.round(r.top + 138*k), w:Math.round(404*k), h:Math.round(154*k)};
   if(!document.body.classList.contains('video-on')) W.frame(dt, raw, mirror); // 3D rests while the story video plays
+  // bubble follows Zippy, using this frame's camera
+  if(!bubbleEl.classList.contains('hide')){ const p = W.project(W.Z.x, W.ZH+0.45, W.Z.z), w=innerWidth, h=innerHeight;
+    bubbleEl.style.left = (((p.x*0.5+0.5)*w - r.left)/k)+'px'; bubbleEl.style.top = (((-p.y*0.5+0.5)*h - r.top)/k)+'px'; }
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
