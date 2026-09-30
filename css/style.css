@@ -283,3 +283,46 @@ html,body{height:100%;margin:0;overflow:hidden;background:#6eb6fc;color:var(--te
 /* narration lock: controls dim while Zippy speaks (inert blocks them; pointer-events is the fallback) */
 #stage.talking #panel :is(.opt,.tile,.go,.slot,.rrow .mv button),#stage.talking #cta,#stage.talking #againBtn{opacity:.5;pointer-events:none!important;transition:opacity .3s}
 #stage #panel :is(.opt,.tile,.go,.slot,.rrow .mv button),#stage #cta{transition:opacity .3s}
+
+/* results: last check + "What you did" record */
+#done .skills.chk{display:flex;flex-direction:column;gap:12px}
+#done .chk-q{font-size:28px;font-weight:900;color:var(--navy)}
+#done .chk-opt{display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding:8px 12px;border-radius:20px;background:#fff!important;border:3px solid var(--line)!important;text-align:left;transition:border-color .2s,background .2s,opacity .2s}
+#done .chk-opt:hover:not([disabled]){border-color:var(--sky)!important}
+#done .chk-opt .k{padding:5px 10px;border-radius:10px;background:var(--navy);color:#fff;font-size:18px;font-weight:900;letter-spacing:.04em}
+#done .chk-opt .chip{width:auto;min-height:42px;font-size:19px;padding:3px 12px 3px 5px}
+#done .chk-opt .chip .ci{width:34px;height:34px}
+#done .chk-opt .chip .ci svg{width:25px;height:25px}
+#done .chk-opt.right{border-color:var(--green)!important;background:#e6f6ee!important}
+#done .chk-opt.wrong{border-color:var(--amber)!important;background:#fff6e0!important;opacity:.75;cursor:default}
+#done .chk-fb{min-height:34px;font-size:23px;font-weight:800;color:var(--navy)}
+#done .rec-h{grid-column:1/-1;font-size:18px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+/* the check needs more room than the record: smaller heading and art while it is showing */
+#done.checking h2{font-size:60px}
+#done.checking .sub{font-size:25px;margin:10px 0 16px}
+#done.checking .lic img{height:240px}
+#done .skills:not(.chk) .sk{font-size:22px;padding:12px 16px}
+
+/* SME review: two-rule builder, greyed rules that were never checked, rulebook source tags */
+.rule-lbl{margin:0 0 -8px 6px;font-size:18px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rule.miss{opacity:.6}
+.rule.skip,.rrow.skip{opacity:.35}
+.rrow.skip::after{content:"not checked";position:absolute;right:16px;bottom:8px;font-size:15px;font-weight:800;color:var(--muted)}
+.rrow .body .src{margin-left:auto;padding:2px 8px;border-radius:8px;background:var(--grey);font-size:14px;font-weight:800;color:var(--muted);white-space:nowrap}
+.rlist.compact{gap:8px}
+.rlist.compact .rrow{padding:6px 10px}
+.rlist.compact .rrow .num{width:36px;height:36px;font-size:20px}
+.rlist.compact .rrow .body{font-size:19px;gap:6px}
+.rlist.compact .rrow .body .chip{min-height:42px;font-size:18px}
+.rlist.compact .rrow .body .chip .ci{width:32px;height:32px}
+.rlist.compact .rrow .body .k{font-size:17px;padding:4px 9px}
+/* two rule cards on one screen (Build B): tighter so the Run button stays inside the panel */
+.rule.dense{padding:10px 14px;gap:6px 12px}
+.rule.dense .kw{height:48px;font-size:25px}
+.rule.dense .slot{min-height:48px}
+.rule.dense .slot.full .chip{min-height:42px;font-size:20px}
+.rule.dense ~ .tray{padding:8px 14px;gap:4px}
+.rule.dense ~ .tray .tiles{gap:8px}
+.rule.dense ~ .tray .chip{min-height:44px;font-size:20px}
+.rule.dense ~ .tray .chip .ci{width:34px;height:34px}
+.rrow.skip .body .src{visibility:hidden} /* "not checked" takes its place */

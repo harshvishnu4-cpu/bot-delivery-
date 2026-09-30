@@ -10,6 +10,8 @@ const sv = (p, vb='0 0 24 24') => `<svg viewBox="${vb}" aria-hidden="true">${p}<
 const IC = {
   red: sv('<rect x="7" y="2" width="10" height="20" rx="3" fill="#183153"/><circle cx="12" cy="7" r="3" fill="#ff3b30"/><circle cx="12" cy="15" r="3" fill="#3a4350"/>'),
   green: sv('<rect x="7" y="2" width="10" height="20" rx="3" fill="#183153"/><circle cx="12" cy="7" r="3" fill="#3a4350"/><circle cx="12" cy="15" r="3" fill="#27d36b"/>'),
+  school: sv('<path d="M3 10.5l9-6.5 9 6.5" fill="none" stroke="#183153" stroke-width="2" stroke-linejoin="round"/><rect x="5" y="10.5" width="14" height="10" fill="#E76D5B"/><rect x="10" y="14.5" width="4" height="6" fill="#fff"/><rect x="6.5" y="12.5" width="2.5" height="2.5" fill="#fff"/><rect x="15" y="12.5" width="2.5" height="2.5" fill="#fff"/><path d="M12 4V1.5h3" stroke="#183153" stroke-width="1.4" fill="none"/>'),
+  kids: sv('<path d="M12 2.5l10 17.5H2z" fill="#F2A93B" stroke="#183153" stroke-width="1.2" stroke-linejoin="round"/><circle cx="9.6" cy="9.8" r="1.5" fill="#183153"/><circle cx="14.6" cy="10.6" r="1.3" fill="#183153"/><path d="M9.6 11.8v3M8.2 17.4l1.4-2.6 1.4 2.6M14.6 12.4v2.6M13.4 17.2l1.2-2.2 1.2 2.2" stroke="#183153" stroke-width="1.4" fill="none" stroke-linecap="round"/>'),
   person: sv('<circle cx="12" cy="4.5" r="2.6" fill="#183153"/><path d="M8.5 9.5h7l-.8 6H13l-.5 6h-1l-.5-6H9.3z" fill="#2F6FED"/><rect x="10.5" y="9" width="3" height="4" fill="#F2A93B"/>'),
   clearX: sv('<path d="M3 20h18" stroke="#183153" stroke-width="2.4" stroke-linecap="round"/><path d="M6 8h12M6 14h12" stroke="#fff" stroke-width="0"/><rect x="4" y="11" width="16" height="3" rx="1.5" fill="#fff" stroke="#183153" stroke-width="1.6"/><path d="M8 7l3 3 5-6" stroke="#2FA66A" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'),
   cone: sv('<path d="M12 2.5l6 16H6z" fill="#ff7a1a"/><path d="M9.2 11h5.6l1 2.8H8.2z" fill="#fff"/><rect x="4" y="18.5" width="16" height="3" rx="1" fill="#ff7a1a"/>'),
@@ -61,7 +63,7 @@ const IC = {
 const COND = {
   water:{t:'Water on road', i:'water'}, dry:{t:'Road is dry', i:'dry'},
   block:{t:'Road block ahead', i:'block'}, laneClear:{t:'Other lane clear', i:'laneClear'}, scooter:{t:'Scooter coming', i:'scooter'},
-  bump:{t:'Speed breaker', i:'bump'}, turn:{t:'Turn ahead', i:'turnSign'}, clear:{t:'Road is clear', i:'clearX'}
+  bump:{t:'Speed breaker', i:'bump'}, school:{t:'School zone', i:'school'}, kids:{t:'Kids crossing', i:'kids'}, turn:{t:'Turn ahead', i:'turnSign'}, clear:{t:'Nothing ahead', i:'clearX'}
 };
 const ACTN = { GO:{t:'GO'}, STOP:{t:'STOP'}, SLOW:{t:'SLOW DOWN'}, CHANGE:{t:'CHANGE LANE'}, TURN:{t:'TURN'} };
 const ACOL = { GO:'#2FA66A', STOP:'#E76D5B', SLOW:'#F2A93B', CHANGE:'#2F6FED', TURN:'#7B5CE0', Q:'#183153' };
@@ -90,43 +92,49 @@ const L = {
   predGo: "You guessed it would keep going straight, and that's exactly what happened.",
   predBack: "You guessed it would turn back. But its steps only said forward.",
   fix3: "Straight-only steps won't reach Mrs. Sharma. Let's teach Zippy smarter rules, one at a time.",
-  bcA: ["A rule says: IF something is true, THEN do this. ELSE, do that.", "Build a water rule so Zippy doesn't slip. Then press Run."],
+  bcA: ["A rule says: IF a condition is true, THEN do one action. ELSE, do another.", "Build a water rule so Zippy doesn't slip. Then press Run."],
   bcAh1: "What should Zippy do when there is water on the road?",
   bcAh2: "Try this: IF water on road, THEN slow down. ELSE, go.",
   bcAok: "Shabash! One rule handled both the water and the dry road.",
   bcB: "Road block ahead, and a scooter is coming. Press Run to test your water rule.",
-  bcBfail: ["Crash! Your water rule said go, but a road block was ahead.", "Go around only if the other lane is clear. AND means both must be true."],
+  bcBfail: ["Crash! Your water rule said go, but a road block was ahead.", "Change lane only if the other lane is clear. AND needs both conditions true."],
+  bcB2: "Build two rules: one to change lane, and one to stop for the scooter.",
   crashB: "Crash! A road block! If the other lane isn't clear, what should Zippy do?",
-  bcBh1: "Changing lane is safe only when two things are true. What are they?",
-  bcBh2: "Try: IF road block ahead AND other lane clear, THEN change lane. ELSE, stop.",
-  bcBok: "Excellent! With AND, Zippy goes around only when both things are true.",
-  ord: ["Zippy checks its rules from top to bottom. The first rule that fits wins.", "Next comes a turn, with water right at it. Order the rules, then press Run."],
+  bcBh1: "Changing lane is safe only when two conditions are true. Which two?",
+  bcBh2: ["Rule 1: IF road block AND other lane clear, THEN change lane.", "Rule 2: IF road block AND scooter coming, THEN stop."],
+  bcBok: "Excellent! With AND, Zippy goes around only when both conditions are true.",
+  ord: ["Zippy checks rules top to bottom. The first rule whose condition is true wins.", "A rule with ELSE always answers, so Zippy stops checking. Put it last.", "Next comes a turn, with water right at it. Order the rules, then press Run."],
   ordh1: "Water and a turn at the same time. Which rule should Zippy follow first?",
   ordh2: "Turning on a wet road is slippery. Move the water rule above the turn rule.",
   ordOk: "Well done! Zippy slowed down first, then turned safely onto the next street.",
+  missedElse: "The ELSE rule answered first, so Zippy never checked the turn rule.",
   dbg: "These rules have a bug. Watch the run and see which rule Zippy uses.",
-  dbgFail: ["Crash! The road was dry, so the top rule fit first.", "Zippy never checked for the road block. Can you fix the order?"],
+  dbgFail: ["Crash! 'Road is dry' was true too, so the top rule won.", "Zippy never checked for the road block. Can you fix the order?"],
   dbgh1: "Which matters more: a dry road, or a road block ahead?",
   dbgh2: "Move the road block rule above the dry road rule.",
-  dbgOk: "Bug fixed! A general rule should not come before a more important one.",
-  fin: ["Last street! Sometimes there's water. Sometimes a speed breaker. Either one means slow down.", "Build the whole rule yourself this time, joining words too."],
-  finh1: "Every rule starts with IF. Then pick the two things Zippy should watch for.",
+  dbgOk: ["Bug fixed! 'Road is dry' was true even with a block ahead.", "So it fired first. Always check the most important thing first."],
+  fin: ["Last street! Sometimes there's water. Sometimes a speed breaker. One or both means slow down.", "Choose the conditions, the actions, and AND or OR.", "AND and OR are operators: they join two conditions into one."],
+  finh1: "Pick the two conditions Zippy should watch for, then AND or OR.",
   finh2: "Try: IF water OR speed breaker, THEN slow down. ELSE, go.",
-  finAnd: ["AND needs water and a speed breaker together. Here there was only one!", "Which joining word means either one is enough?"],
-  finOk: "Brilliant! OR means either one is enough.",
-  grammar: ["Zippy can't read this rule. IF starts it. AND or OR joins two conditions.", "THEN says what to do. ELSE says what to do otherwise."],
+  finAnd: ["AND needs water and a speed breaker together. Here there was only one!", "Which operator means one or both is enough?"],
+  finOk: "Brilliant! OR means one or both is enough.",
   run: ["The real delivery! Three streets, two turns, and Mrs. Sharma is waiting.", "Zippy will use all your rules. Press Start and watch every decision."],
   runOk: "Delivered! Mrs. Sharma got her biryani, hot and safe.",
   done: "Zippy delivered the biryani! Mrs. Sharma says thank you, rule designer!",
+  chk: ["One last check! A new street has a school zone and kids crossing.", "Zippy must slow down if one or both are there. Which rule works?"],
+  chkOk: "Yes! Zippy slows down for the school zone, the kids, or both.",
+  chkAnd: "With AND, a school zone alone isn't enough. Zippy would drive past fast!",
+  chkFlip: "This rule goes fast in the school zone, and slows on empty roads!",
+  chkShow: "This one works: OR means one or both is enough.",
   empty: "There's an empty space in the rule. Fill every space, then press Run.",
   slip: "Zippy slipped! What does your rule say to do when there's water?",
-  slipTurn: "Zippy slipped turning on the wet road! The top rule wins. Which matters more?",
+  slipTurn: "Zippy slipped turning on the wet road! The first true rule wins. Which matters more?",
   crash: "Crash! There was a road block, and Zippy's rule said go.",
   scooter: "Safety stop! A scooter was coming. Change lane only when the other lane is clear.",
   bump: "Bump! The biryani nearly flew out! What should Zippy do at a speed breaker?",
   missed: "Zippy missed the turn and hit a closed road! When the road turns, turn too.",
-  stuck: "The road was clear, but Zippy waited! What should your rule say when it's safe?",
-  norule: "No rule fit, so Zippy didn't know what to do."
+  stuck: "Nothing was ahead, but Zippy waited! What should your rule say when it's safe?",
+  norule: "No rule's condition was true, so Zippy didn't know what to do."
 };
 
 /* ---------- audio: sfx (Web Audio, generated) ---------- */
@@ -184,7 +192,7 @@ function sayOne(text, last){
   if(src){ // recorded voice; muted clips still play silently so the caption keeps the same timing
     const a = new Audio(src); a.muted = A.muted; SP.audio = a; spoke = true;
     a.onended = ()=>{ if(tok===SP.token) ended = true; }; a.onerror = ()=>{ if(tok===SP.token) spoke = false; }; // missing file: fall back to timing
-    const p = a.play(); if(p && p.catch) p.catch(()=>{ if(tok===SP.token) spoke = false; }); if(paused) a.pause(); }
+    const p = a.play(); if(p && p.catch) p.catch(err=>{ if(tok===SP.token && !(err && err.name==='AbortError')) spoke = false; }); if(paused) a.pause(); }
   else try{ if(window.speechSynthesis && !A.muted && speechSynthesis.getVoices().length){ const u = new SpeechSynthesisUtterance(text); if(SP.voice) u.voice = SP.voice; u.lang = 'en-IN'; u.rate = 0.98; u.pitch = 1.05;
         u.onend = ()=>{ if(tok===SP.token) ended = true; }; u.onerror = ()=>{ if(tok===SP.token) ended = true; }; speechSynthesis.speak(u); spoke = true; } }catch(e){}
   const hardEnd = gt + words*0.62 + 3;
@@ -217,15 +225,16 @@ function hideToast(){ $('#toast').classList.add('hide'); }
 function bubble(action){ const el=$('#bubble'); if(!action){ el.classList.add('hide'); return; } const t = action==='Q' ? '?' : ACTN[action].t;
   el.innerHTML = `<div class="b"><div class="ci" style="background:${ACOL[action]}">${IC[action]}</div>${t}</div>`; el.classList.remove('hide'); }
 function hud(st){ const el=$('#hud'); if(!st){ el.classList.add('hide'); return; } const items=[];
-  if(st.water) items.push(['water','Water on road']); if(st.block) items.push(['block','Road block ahead']);
+  items.push(st.water ? ['water','Water on road'] : ['dry','Road is dry']); if(st.block) items.push(['block','Road block ahead']); // dry/water always shown: rules can use "Road is dry"
   if(st.scooter) items.push(['scooter','Scooter coming']); else if(st.block) items.push(['laneClear','Other lane clear']);
-  if(st.bump) items.push(['bump','Speed breaker']); if(st.turn) items.push(['turnSign','Turn ahead']); if(!items.length) items.push(['dry','Road clear']);
+  if(st.bump) items.push(['bump','Speed breaker']); if(st.turn) items.push(['turnSign','Turn ahead']); if(sensors(st).clear) items.push(['clearX','Nothing ahead']);
   el.innerHTML = `<div class="s eye"><span class="ci">${IC.eye}</span>Zippy sees</div>` + items.map(([i,t])=>`<div class="s"><span class="ci">${IC[i]}</span>${t}</div>`).join(''); el.classList.remove('hide'); }
 // the plate is one SVG; the caps and the plate are clipped copies of it so they can open like a capsule
+const CTA_TEXT_MAX = 360; // px of text that fits on the pink plate between the white end caps
 function cta(label){ const el=$('#cta'), F='assets/skai/cta-frame.svg';
-  el.innerHTML = `<button class="sk-cta" id="ctaBtn"><span class="sk-cta-in"><img class="plate" src="${F}" alt=""><span class="lbl">${label}</span>
+  el.innerHTML = `<button class="sk-cta" id="ctaBtn"><span class="sk-cta-in"><img class="plate" src="${F}" alt=""><span class="lbl"><span class="t">${label}</span></span>
     <span class="capL"><img src="${F}" alt=""><img src="assets/skai/cta-bracket.svg" alt="" style="left:-0.3px;top:50.5px"></span><span class="capR"><img src="${F}" alt=""></span><img class="stripes" src="assets/skai/cta-stripes.svg" alt="" style="left:48px;top:19.1px"></span></button>`;
-  el.classList.remove('hide'); stage.classList.add('cta-on'); const b=$('#ctaBtn'), lbl=b.querySelector('.lbl'); const fit=()=>{ lbl.style.fontSize=''; const w=lbl.scrollWidth; if(w>440) lbl.style.fontSize=(43.43*440/w)+'px'; }; fit(); document.fonts && document.fonts.ready.then(fit);
+  el.classList.remove('hide'); stage.classList.add('cta-on'); const b=$('#ctaBtn'), lbl=b.querySelector('.lbl'); const fit=()=>{ lbl.style.fontSize=''; const w=lbl.firstElementChild.offsetWidth; if(w>CTA_TEXT_MAX) lbl.style.fontSize=(43.43*CTA_TEXT_MAX/w)+'px'; }; // measure the text itself, not its box fit(); document.fonts && document.fonts.ready.then(fit);
   openCta(b); setTimeout(()=>b.focus({preventScroll:true}),50); return clickOnce(b).then(()=>{ SFX.tap(); hideCta(); b.id=''; b.disabled=true; }); }
 // capsule open: closed pill pops in, caps slide apart while the plate widens from the centre, then the label
 function openCta(b){ const q=s=>b.querySelector(s), inn=q('.sk-cta-in'), done=()=>inn.classList.add('pulse');
@@ -241,13 +250,14 @@ function hideCta(){ $('#cta').classList.add('hide'); stage.classList.remove('cta
 async function flash(){ const f=$('#flash'); f.classList.add('on'); SFX.whoosh(); await wait(0.28); return ()=>f.classList.remove('on'); }
 
 /* ---------- hints (after 12 s idle) ---------- */
-const H = { list:null, idx:0, last:0, el:null };
-function hintsOn(list, container){ H.list=list; H.idx=0; H.last=gt; H.el=container; syncHint(); }
+const H = { list:null, idx:0, last:0, el:null, prev:null, force:false };
+function hintsOn(list, container){ if(H.prev!==list){ H.idx=0; H.prev=list; } H.list=list; H.last=gt; H.el=container; syncHint(); } // same stage again (a retry): keep escalating
 function hintsOff(){ H.list=null; if(H.el) H.el.innerHTML=''; syncHint(); }
 function syncHint(){ $('#skHint').disabled = !(H.list && H.idx < H.list.length); }
 function poke(){ H.last = gt; }
 ['pointerdown','keydown'].forEach(ev=>addEventListener(ev, poke, true));
-function hintTick(){ if(!H.list || paused) return; if(gt - H.last >= 12 && H.idx < H.list.length){ const t=H.list[H.idx++]; H.last=gt; syncHint(); if(H.el){ H.el.innerHTML = `<div class="hint">${IC.bulb}<span>${t}</span></div>`; } say(t); } }
+function hintTick(){ if(!H.list || paused) return; if(!SP.done && !H.force){ H.last = gt; return; } // never cut into narration; idle time counts from when it ends
+  if((H.force || gt - H.last >= 12) && H.idx < H.list.length){ H.force = false; const t=H.list[H.idx++]; H.last=gt; syncHint(); if(H.el){ H.el.innerHTML = `<div class="hint">${IC.bulb}<span>${[].concat(t).join(' ')}</span></div>`; } say(t); } }
 
 /* ---------- progress ---------- */
 const STEPS = [['PREDICTION','Predict','Q'],['FIXED_ROUTE_TEST','Test','flag'],['BUILD_CONDITIONAL','Build','build'],['ORDER_RULES','Order','list'],['DEBUG_PRIORITY','Debug','wrench'],['BUILD_FINAL_RULE','Create','build'],['FINAL_RUN','Deliver','parcel']];
@@ -265,7 +275,8 @@ const CP_TYPES = {
   blockScooter:{block:1, scooter:1, phases:[{block:1, scooter:1},{block:1}]},
   bump:{bump:1, phases:[{bump:1},{}]},
   turnL:{turn:-1, phases:[{turn:1}]}, turnR:{turn:1, phases:[{turn:1}]},
-  waterTurn:{water:1, turn:-1, phases:[{water:1, turn:1},{turn:1}]}
+  waterTurn:{water:1, turn:-1, phases:[{water:1, turn:1},{turn:1}]}, waterTurnR:{water:1, turn:1, phases:[{water:1, turn:1},{turn:1}]},
+  waterBump:{water:1, bump:1, phases:[{water:1, bump:1},{}]} // both at once: OR must fire on both
 };
 let course = null; let liveProps = [];
 function disposeGroup(g){ if(!g) return; W.scene.remove(g); (g.userData.carves||[]).forEach(t=>W.uncarve(t)); g.userData.carves=[]; }
@@ -280,10 +291,10 @@ function buildCourse(types, startZ, opts={}){
   const c = {group:g, cps, startZ, endZ, opts};
   for(const cp of cps){ const d=cp.def; cp.front = cp.z + 3;
     if(d.turn){ cp.zJ = cp.z - 10; cp.front = cp.zJ + 8; cp.side = d.turn; cp.street = 'Street '+(++street); const j = W.makeJunction(g, cp.zJ, d.turn, cp.street); cp.closed = j.closed; }
-    if(d.water){ cp.pz = d.fixed ? cp.z + 9 : cp.z; cp.puddle = W.makePuddle(g, cp.pz); cp.front = cp.pz + 4.6; }
+    if(d.water){ cp.pz = d.fixed ? cp.z + 9 : d.bump ? cp.z + 4 : cp.z; cp.puddle = W.makePuddle(g, cp.pz); cp.front = cp.pz + 4.6; }
     if(d.block){ cp.block = W.makeBlock(g, cp.z, -3); if(!d.water) cp.front = cp.z + 3.6; }
     if(d.scooter){ cp.scooter = W.makeScooter(g, 3, cp.z - 26); }
-    if(d.bump){ cp.bump = W.makeBump(g, cp.z); cp.front = cp.z + 3.2; }
+    if(d.bump){ cp.bz = d.water ? cp.z - 3 : cp.z; cp.bump = W.makeBump(g, cp.bz); if(!d.water) cp.front = cp.bz + 3.2; }
   }
   if(opts.finish){ W.makeFinishLine(g, endZ - 2); c.flag = W.makeFlag(g, -6.7, endZ - 2, '#F2A93B'); }
   if(opts.house){ c.house = W.makeHouse(g, endZ - 4); c.flag = W.makeFlag(g, -7.0, endZ + 3, '#2FA66A'); c.sharma = W.makePerson(g, -8.2, endZ - 4, '#d94f8a'); c.sharma.rotation.y = -Math.PI/2; }
@@ -334,7 +345,7 @@ async function crashInto(cp){ const Z=W.Z; Z.v=0; Z.vmax=0; Z.slide=false; Z.sli
   const z0=Z.z; await anim(0.45, k=>{ Z.z = z0 + Math.sin(k*Math.PI/2)*3.2; Z.jy = Math.sin(k*Math.PI)*0.6; }); Z.jy=0; }
 async function slowThrough(cp){ const Z=W.Z; W.setDrive(2.6,null);
   if(cp.puddle){ await until(()=>Z.z <= cp.pz + 3.2); SFX.splash(); W.splash(Z.x, Z.z, 8); await until(()=>Z.z <= cp.pz - 3.4); }
-  else if(cp.bump){ await until(()=>Z.z <= cp.z + 0.4); SFX.tap(); await anim(0.45, k=>{ Z.jy = Math.sin(k*Math.PI)*0.16; }); Z.jy=0; await until(()=>Z.z <= cp.z - 1.5); } }
+  if(cp.bump){ await until(()=>Z.z <= cp.bz + 0.4); SFX.tap(); await anim(0.45, k=>{ Z.jy = Math.sin(k*Math.PI)*0.16; }); Z.jy=0; await until(()=>Z.z <= cp.bz - 1.5); } }
 async function doTurn(cp){ const Z=W.Z, side=cp.side, zJ=cp.zJ;
   lane(-3); W.setDrive(6,null); await until(()=>Z.z <= zJ + 8); SFX.blinker();
   const laneZ = side<0 ? zJ+3 : zJ-3; const P0={x:Z.x, z:Z.z}, P1={x:-3, z:laneZ}, P2={x:side<0?-9:3.5, z:laneZ};
@@ -350,24 +361,27 @@ async function stuckFail(cp, st, crawl){ const Z=W.Z; if(crawl) W.setDrive(1.2,n
 let traceUI = null; // {kind:'single'|'list', root}
 async function trace(ev, rules){
   if(!traceUI) return; const root = traceUI.root; const step = 0.26;
-  root.querySelectorAll('.mark').forEach(m=>m.remove()); root.querySelectorAll('.lit,.lit-row,.check,.fired,.miss').forEach(e=>e.classList.remove('lit','lit-row','check','fired','miss'));
-  if(traceUI.kind==='single'){
-    const c = ev.checks[0]; const s1 = root.querySelector('[data-key=c1]'), s2 = root.querySelector('[data-key=c2]');
-    root.querySelector('.kw-if')?.classList.add('lit');
-    for(const [i,s] of [[0,s1],[1,s2]]){ if(!s || c.parts[i]===undefined) continue; s.insertAdjacentHTML('beforeend', `<span class="mark ${c.parts[i]?'y':'n'}">${c.parts[i]?'✓':'✗'}</span>`); SFX.check(); await wait(step); }
-    root.querySelector('.kw-if')?.classList.remove('lit');
-    const br = ev.branch==='then' ? root.querySelector('.kw-then') : root.querySelector('.kw-else'); br?.classList.add('lit');
-    const bs = root.querySelector(`[data-key=${ev.branch==='then'?'then':'else'}]`); bs?.classList.add('lit-row'); await wait(step*1.4);
+  root.querySelectorAll('.mark').forEach(m=>m.remove()); root.querySelectorAll('.lit,.lit-row,.check,.fired,.miss,.skip').forEach(e=>e.classList.remove('lit','lit-row','check','fired','miss','skip'));
+  if(traceUI.kind==='single'){ // one card per rule; checked top to bottom like the rule list
+    const cards = [...root.querySelectorAll('.rule')];
+    for(const c of ev.checks){ const card = cards[c.i]; if(!card) continue; const kif = card.querySelector('.kw-if');
+      kif?.classList.add('lit');
+      for(const [i,role] of [[0,'c1'],[1,'c2']]){ const sl = card.querySelector(`[data-role=${role}]`); if(!sl || c.parts[i]===undefined) continue; sl.insertAdjacentHTML('beforeend', `<span class="mark ${c.parts[i]?'y':'n'}">${c.parts[i]?'✓':'✗'}</span>`); SFX.check(); await wait(step); }
+      kif?.classList.remove('lit');
+      if(c.i===ev.index){ card.querySelector(ev.branch==='then' ? '.kw-then' : '.kw-else')?.classList.add('lit'); card.querySelector(`[data-role=${ev.branch}]`)?.classList.add('lit-row'); await wait(step*1.4); }
+      else card.classList.add('miss'); }
+    cards.forEach((cd,i)=>{ if(ev.index>=0 && i>ev.index) cd.classList.add('skip'); });
   } else {
     const rows = [...root.querySelectorAll('.rrow')];
     for(const c of ev.checks){ const r = rows[c.i]; if(!r) continue; r.classList.add('check'); SFX.check(); await wait(step); r.classList.remove('check');
       if(c.res){ r.classList.add('fired'); r.insertAdjacentHTML('beforeend','<span class="mark y">✓</span>'); }
       else if(c.i===ev.index){ r.classList.add('fired'); r.insertAdjacentHTML('beforeend','<span class="mark else">ELSE</span>'); } // condition false, but its ELSE decided
       else { r.classList.add('miss'); r.insertAdjacentHTML('beforeend','<span class="mark n">✗</span>'); } }
+    rows.forEach((r,i)=>{ if(ev.index>=0 && i>ev.index) r.classList.add('skip'); }); // below the rule that decided: never checked
     await wait(step);
   }
 }
-function clearTrace(){ if(!traceUI) return; const root=traceUI.root; root.querySelectorAll('.mark').forEach(m=>m.remove()); root.querySelectorAll('.lit,.lit-row,.check,.fired,.miss').forEach(e=>e.classList.remove('lit','lit-row','check','fired','miss')); }
+function clearTrace(){ if(!traceUI) return; const root=traceUI.root; root.querySelectorAll('.mark').forEach(m=>m.remove()); root.querySelectorAll('.lit,.lit-row,.check,.fired,.miss,.skip').forEach(e=>e.classList.remove('lit','lit-row','check','fired','miss','skip')); }
 
 /* ---------- running a course with rules ---------- */
 async function consequence(cp, st, need, act){ const Z=W.Z;
@@ -376,7 +390,7 @@ async function consequence(cp, st, need, act){ const Z=W.Z;
     if(act==='CHANGE') lane(3);
     W.setDrive(CRUISE*0.85, null);
     if(cp.puddle){ await until(()=>Z.z <= cp.pz + 3.2); await slipStart(); await slipOut(); bubble('Q'); return {ok:false, reason:'slip', act, cp, st}; }
-    await until(()=>Z.z <= cp.z + 0.5); SFX.bump(); W.shake(0.5); await anim(0.55, k=>{ Z.jy = Math.sin(k*Math.PI)*1.3; }); Z.jy=0; await safetyBrake(); bubble('Q'); return {ok:false, reason:'bump', act, cp, st};
+    await until(()=>Z.z <= cp.bz + 0.5); SFX.bump(); W.shake(0.5); await anim(0.55, k=>{ Z.jy = Math.sin(k*Math.PI)*1.3; }); Z.jy=0; await safetyBrake(); bubble('Q'); return {ok:false, reason:'bump', act, cp, st};
   }
   if(need==='CHANGE' || need==='STOP'){
     if(act==='CHANGE'){ const s=cp.scooter, u=s.userData; lane(3); W.setDrive(4.5,null); u.go=true; u.speed=5; await until(()=>Z.z - s.position.z < 10); u.speed=0; u.go=false; await safetyBrake(); SFX.horn(); await wait(0.35); SFX.horn(); bubble('Q'); return {ok:false, reason:'scooter', act, cp, st}; }
@@ -411,7 +425,7 @@ async function runCourse(c, rules){
         if(need==='CHANGE'){ lane(3); W.setDrive(7, null); await until(()=>Z.z <= cp.z - 5.5); clearTrace(); break; }
         if(need==='TURN'){ await doTurn(cp); turned = true; clearTrace(); break; }
       }
-      return consequence(cp, st, need, act);
+      const res = await consequence(cp, st, need, act); res.branch = ev.branch; return res;
     }
     if(!turned && Math.abs(Z.tx + 3) > 0.1){ lane(-3); }
     hud(null); bubble(null);
@@ -426,7 +440,7 @@ function failLine(res, ctx){
   if(r==='slip'){ if(ctx==='ORD' && res.act==='TURN') return L.slipTurn; return fAnd ? L.finAnd : L.slip; }
   if(r==='bump') return fAnd ? L.finAnd : L.bump;
   if(r==='crash') return ctx==='B' ? L.crashB : ctx==='DBG' ? L.dbgFail : L.crash;
-  if(r==='scooter') return L.scooter; if(r==='missed') return L.missed; return L.norule;
+  if(r==='scooter') return L.scooter; if(r==='missed') return res.branch==='else' ? L.missedElse : L.missed; return L.norule;
 }
 function failToast(res){ const r=res.reason; if(r==='stuck') toast('warn','Zippy got stuck'); else if(r==='norule') toast('warn','No rule fit'); else if(r==='slip') toast('bad','Zippy slipped!'); else if(r==='crash') toast('bad','Crash!'); else if(r==='bump') toast('bad','Bump!'); else if(r==='missed') toast('bad','Missed the turn'); else toast('bad','Safety stop'); }
 async function rewind(c){ const off = await flash(); clearVehicles(); hud(null); bubble(null); hideToast(); clearTrace();
@@ -436,15 +450,17 @@ async function rewind(c){ const off = await flash(); clearVehicles(); hud(null);
 function builder(cfg){
   // cfg.slots: [{key, accept:'cond'|'act'|'kw', label}], cfg.fixedKw: {c1:'IF', c2:'AND', then:'THEN', else:'ELSE'}, palette
   const vals = Object.assign({}, cfg.prefill||{}); let sel = null; let editable = true;
-  const rows = cfg.rows.map(r=>{ const kwCell = r.kwSlot ? `<button class="slot kwslot" data-key="${r.kwSlot}" data-accept="kw" aria-label="joining word space"><span class="ph">word</span></button>` : `<div class="kw ${r.kwClass||''}">${r.kw}</div>`;
-    return kwCell + `<button class="slot" data-key="${r.key}" data-accept="${r.accept}" aria-label="${r.accept==='cond'?'condition':'action'} space"><span class="ph">${r.accept==='cond'?'choose a condition':'choose an action'}</span></button>`; }).join('');
+  const groups = cfg.groups || [cfg.rows], allRows = groups.flat(); // one card per group (rule)
+  const rowHTML = r=>{ const kwCell = r.kwSlot ? `<button class="slot kwslot" data-key="${r.kwSlot}" data-accept="kw" aria-label="operator space"><span class="ph">AND / OR</span></button>` : `<div class="kw ${r.kwClass||''}">${r.kw}</div>`;
+    return kwCell + `<button class="slot" data-key="${r.key}" data-role="${r.role||r.key}" data-accept="${r.accept}" aria-label="${r.accept==='cond'?'condition':'action'} space"><span class="ph">${r.accept==='cond'?'choose a condition':'choose an action'}</span></button>`; };
+  const cards = groups.map((g,gi)=>(groups.length>1 ? `<div class="rule-lbl">Rule ${gi+1}</div>` : '') + `<div class="rule${groups.length>1?' dense':''}"${gi===0?' id="ruleCard"':''} data-rule="${gi}">${g.map(rowHTML).join('')}</div>`).join('');
   const pal = (title, kind, list, fn) => `<div class="tl">${title}</div><div class="tiles">` + list.map(k=>`<button class="tile ${kind==='kw'?'kwt':''}" data-kind="${kind}" data-val="${k}" aria-label="${kind==='cond'?COND[k].t:kind==='act'?ACTN[k].t:k}">${fn(k)}</button>`).join('') + `</div>`;
-  const html = `<div class="rule" id="ruleCard">${rows}</div>
-    <div class="tray">${cfg.kws?pal('Joining words','kw',cfg.kws,chipKw):''}${pal('Conditions','cond',cfg.conds,chipCond)}${pal('Actions','act',cfg.acts,chipAct)}</div>`;
-  const api = { html, vals, bind(root){ api.root=root; const card=root.querySelector('#ruleCard');
-      const slots = [...card.querySelectorAll('.slot')];
+  const html = `${cards}
+    <div class="tray">${cfg.kws?pal('Joining words (operators)','kw',cfg.kws,chipKw):''}${pal('Conditions','cond',cfg.conds,chipCond)}${pal('Actions','act',cfg.acts,chipAct)}</div>`;
+  const api = { html, vals, bind(root){ api.root=root;
+      const slots = [...root.querySelectorAll('.rule .slot')];
       const render = ()=>{ slots.forEach(s=>{ const k=s.dataset.key, v=vals[k]; s.classList.toggle('full', !!v); s.classList.toggle('sel', sel===k); s.classList.remove('err');
-        s.innerHTML = v ? (s.dataset.accept==='cond'?chipCond(v):s.dataset.accept==='act'?chipAct(v):chipKw(v)) : `<span class="ph">${s.dataset.accept==='cond'?'choose a condition':s.dataset.accept==='act'?'choose an action':'word'}</span>`; }); };
+        s.innerHTML = v ? (s.dataset.accept==='cond'?chipCond(v):s.dataset.accept==='act'?chipAct(v):chipKw(v)) : `<span class="ph">${s.dataset.accept==='cond'?'choose a condition':s.dataset.accept==='act'?'choose an action':'AND / OR'}</span>`; }); };
       api.render = render;
       const place = (kind, val, target)=>{ if(!editable) return; let key = target;
         if(!key){ if(sel && slots.find(s=>s.dataset.key===sel).dataset.accept===kind) key = sel; else { const e = slots.find(s=>s.dataset.accept===kind && !vals[s.dataset.key]); key = e && e.dataset.key; } }
@@ -455,9 +471,11 @@ function builder(cfg){
       root.querySelectorAll('.tile').forEach(t=>makeDraggable(t, (target)=>{ if(target && target.classList.contains('slot')) place(t.dataset.kind, t.dataset.val, target.dataset.key); else if(!target) place(t.dataset.kind, t.dataset.val); }, ()=>editable, slots));
       render(); },
     setEditable(b){ editable=b; api.root && api.root.querySelector('.tray').classList.toggle('gone', !b); if(!b){ sel=null; api.render(); } },
-    missing(){ return cfg.rows.flatMap(r=>[r.key, r.kwSlot]).filter(k=>k && !vals[k]); },
+    missing(){ return allRows.flatMap(r=>[r.key, r.kwSlot]).filter(k=>k && !vals[k]); },
     flagEmpty(){ const miss=api.missing(); api.root.querySelectorAll('.slot').forEach(s=>{ if(miss.includes(s.dataset.key)){ s.classList.remove('need'); void s.offsetWidth; s.classList.add('need'); } }); },
-    rule(){ return { c1:vals.c1, op: cfg.fixedOp || vals.k2 || null, c2: vals.c2 || null, then:vals.then, else:vals.else }; }
+    rule(){ const one = g=>{ const r={}; g.forEach(row=>{ r[row.role||row.key] = vals[row.key] || null; if(row.kwSlot) r.op = vals[row.kwSlot] || null; });
+        return { c1:r.c1, op: r.c2 ? (cfg.fixedOp || r.op || null) : null, c2: r.c2 || null, then:r.then, else:r.else || null }; };
+      return cfg.groups ? groups.map(one) : one(groups[0]); } // several groups: an array of rules
   };
   return api;
 }
@@ -476,7 +494,7 @@ function makeDraggable(el, onDrop, can, slots){
 }
 
 /* ---------- rule list (ordering) ---------- */
-function ruleRowHTML(r, i, n, locked){ return `<div class="rrow ${locked?'locked':''}" data-i="${i}"><div class="num">${i+1}</div><div class="body"><span class="k">IF</span>${chipCond(r.c1)}${r.op?`<span class="k">${r.op}</span>${chipCond(r.c2)}`:''}<span class="k">THEN</span>${chipAct(r.then)}${r.else?`<span class="k">ELSE</span>${chipAct(r.else)}`:''}</div>
+function ruleRowHTML(r, i, n, locked){ return `<div class="rrow ${locked?'locked':''}" data-i="${i}"><div class="num">${i+1}</div><div class="body"><span class="k">IF</span>${chipCond(r.c1)}${r.op?`<span class="k">${r.op}</span>${chipCond(r.c2)}`:''}<span class="k">THEN</span>${chipAct(r.then)}${r.else?`<span class="k">ELSE</span>${chipAct(r.else)}`:''}${r.src?`<span class="src">from ${r.src}</span>`:''}</div>
   <div class="mv"><button data-mv="-1" aria-label="Move rule ${i+1} up" ${i===0?'disabled':''}>${IC.up}</button><button data-mv="1" aria-label="Move rule ${i+1} down" ${i===n-1?'disabled':''}>${IC.down}</button></div></div>`; }
 function ruleList(rules, locked){
   const api = { rules, locked, html:`<div class="rlist" id="rlist"></div>`, bind(root){ api.root=root; api.el=root.querySelector('#rlist'); api.render(); },
@@ -496,12 +514,14 @@ function ruleList(rules, locked){
 }
 
 /* ================= ACTIVITIES ================= */
-const G = { prediction:null, ruleA:null, ruleB:null, order:null, debug:null, finalRule:null };
+const G = { prediction:null, ruleA:null, ruleB:null, order:null, debug:null, finalRule:null, tries:{} };
 const STORAGE_KEY = 'delivery-bot-academy-biryani-v1';
+// false: every visit starts fresh (story video, then the whole mission). true: "Resume Mission" continues saved progress.
+const RESUME_SAVED_PROGRESS = false;
 const RESUMABLE_STATES = new Set(['INTRO','PREDICTION','FIXED_ROUTE_TEST','BUILD_CONDITIONAL','ORDER_RULES','DEBUG_PRIORITY','BUILD_FINAL_RULE','FINAL_RUN','COMPLETE']);
 let state = 'TITLE';
 function saveProgress(startZ){
-  if(!RESUMABLE_STATES.has(state)) return;
+  if(!RESUME_SAVED_PROGRESS || !RESUMABLE_STATES.has(state)) return;
   try{
     const z = Number.isFinite(startZ) ? startZ : (Number.isFinite(SNAP[state]) ? SNAP[state] : W.Z.z);
     localStorage.setItem(STORAGE_KEY, JSON.stringify({version:1, state, startZ:z, snap:SNAP, game:G, updatedAt:Date.now()}));
@@ -527,16 +547,16 @@ function rulesFinalOp(){ return G._curFinal ? G._curFinal.op : null; }
 
 async function travelTo(z){ hidePanel(); hud(null); bubble(null); hideToast(); W.setDrive(14, z); await until(()=>W.Z.v===0 && Math.abs(W.Z.z-z)<0.08); }
 
-function routeMap(){ const ic=(k,x,y,bg)=>`<circle cx="${x}" cy="${y}" r="19" fill="${bg||'#fff'}" stroke="#183153" stroke-width="2.5"/>`+IC[k].replace('<svg ', `<svg x="${x-13}" y="${y-13}" width="26" height="26" `);
-  return `<div class="route"><svg viewBox="0 0 600 182" aria-label="Route map: three streets to Mrs. Sharma's house">
-  <path d="M40 132H270V44H560" fill="none" stroke="#5d6570" stroke-width="22" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M40 132H270V44H560" fill="none" stroke="#fff" stroke-width="2.5" stroke-dasharray="8 8"/>
-  <text x="112" y="176" font-size="17" font-weight="900" fill="#5b6878" font-family="inherit">STREET 1</text>
-  <text x="300" y="94" font-size="17" font-weight="900" fill="#5b6878" font-family="inherit">STREET 2</text>
-  <text x="380" y="22" font-size="17" font-weight="900" fill="#5b6878" font-family="inherit">STREET 3</text>
-  ${ic('bowl',40,132)}${ic('water',112,132)}${ic('block',184,132)}${ic('turnSign',270,132)}${ic('scooter',270,88)}${ic('turnSign',270,44)}${ic('bump',360,44)}${ic('water',440,44)}
-  <circle cx="560" cy="44" r="23" fill="#2FA66A"/>${IC.house.replace('<svg ', '<svg x="545" y="29" width="30" height="30" style="color:#fff" ')}
-  <text x="592" y="88" text-anchor="end" font-size="17" font-weight="900" fill="#2FA66A" font-family="inherit">Mrs. Sharma</text></svg></div>`; }
+function routeMap(){ const ic=(k,x,y,r=17)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" stroke="#183153" stroke-width="2.5"/>`+IC[k].replace('<svg ', `<svg x="${x-r*0.68}" y="${y-r*0.68}" width="${r*1.36}" height="${r*1.36}" `);
+  return `<div class="route"><svg viewBox="0 0 600 196" aria-label="Route map: three streets to Mrs. Sharma's house">
+  <path d="M40 160H270V36H560" fill="none" stroke="#5d6570" stroke-width="22" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M40 160H270V36H560" fill="none" stroke="#fff" stroke-width="2.5" stroke-dasharray="8 8"/>
+  <text x="112" y="192" font-size="17" font-weight="900" fill="#5b6878" font-family="inherit">STREET 1</text>
+  <text x="296" y="104" font-size="17" font-weight="900" fill="#5b6878" font-family="inherit">STREET 2</text>
+  <text x="380" y="16" font-size="17" font-weight="900" fill="#5b6878" font-family="inherit">STREET 3</text>
+  ${ic('bowl',40,160)}${ic('water',112,160)}${ic('block',184,160)}${ic('turnSign',270,160)}${ic('scooter',270,119)}${ic('bump',270,78)}${ic('turnSign',270,36)}${ic('water',300,62,11)}${ic('water',420,36)}
+  <circle cx="560" cy="36" r="23" fill="#2FA66A"/>${IC.house.replace('<svg ', '<svg x="545" y="21" width="30" height="30" style="color:#fff" ')}
+  <text x="592" y="82" text-anchor="end" font-size="17" font-weight="900" fill="#2FA66A" font-family="inherit">Mrs. Sharma</text></svg></div>`; }
 async function INTRO(){
   setState('INTRO', 0); W.cam.mode='intro'; W.cam.liftTarget=0; $('#skMeter').classList.add('hide');
   course = buildCourse(['fixedDelivery'], 0, {finish:true});
@@ -585,22 +605,21 @@ async function FIXED_ROUTE_TEST(){
   hud({water:1, block:1}); await runFixed(course, true); bubble('Q'); toast('bad','Crash!'); SFX.bad();
   await say(L.fixFail); await say(G.prediction==='safe'?L.predSafe:G.prediction==='go'?L.predGo:L.predBack); hideToast(); hud(null); bubble(null);
   say(L.fix3);
-  await cta('Make Zippy smarter');
+  await cta('Teach Zippy');
   const next = course.endZ - 26;
   { const off = await flash(); hidePanel(); clearCourse(course); course=null; W.placeZippy(next); W.snapCamera(); await wait(0.1); off(); }
   return BUILD_CONDITIONAL(next);
 }
 async function builderLoop(opts){
-  let first = true;
+  let first = true; G.tries = G.tries || {}; G.tries[opts.ctx] = 0;
   while(true){
     opts.b.setEditable(true); const run=$('#run'); run.disabled=false; hintsOn(opts.hints, $('#hint'));
     await clickOnce(run); SFX.tap(); poke();
     const miss = opts.b.missing(); if(miss.length){ opts.b.flagEmpty(); SFX.bad(); say(L.empty); continue; }
-    if(opts.validate){ const bad = opts.validate(); if(bad){ SFX.bad(); const card=$('#ruleCard'); card.classList.remove('bad'); void card.offsetWidth; card.classList.add('bad'); bad.forEach(k=>panel.querySelector(`[data-key=${k}]`).classList.add('err')); bubble('Q'); say(L.grammar); await wait(1.2); bubble(null); continue; } }
     hintsOff(); opts.b.setEditable(false); run.disabled=true; stopSpeech(); clearCaption();
     if(!first) opts.c = await rewind(opts.c); first=false;
-    const rule = opts.b.rule(); if(opts.ctx==='FIN') G._curFinal = rule;
-    const res = await runCourse(opts.c, [rule]);
+    const rule = opts.b.rule(); if(opts.ctx==='FIN') G._curFinal = rule; G.tries[opts.ctx]++;
+    const res = await runCourse(opts.c, [].concat(rule));
     if(res.ok){ SFX.ok(); toast('ok','Rule works!'); await say(opts.okLine); hideToast(); return {rule, c:opts.c}; }
     failToast(res); SFX.bad(); await say(failLine(res, opts.ctx)); hideToast(); hud(null); bubble(null); clearTrace(); clearVehicles();
     run.innerHTML = `${IC.replay}Run again`;
@@ -627,11 +646,14 @@ async function BUILD_CONDITIONAL(startZ){
   say(L.bcB); await clickOnce($('#run')); SFX.tap(); $('#run').disabled=true; stopSpeech(); clearCaption();
   let res = await runCourse(c, [G.ruleA]);
   failToast(res); SFX.bad(); await say(res.reason==='crash' ? L.bcBfail : failLine(res,'B')); hideToast(); hud(null); bubble(null); clearVehicles();
-  const bB = builder({ rows:[{kw:'IF',kwClass:'kw-if',key:'c1',accept:'cond'},{kw:'AND',key:'c2',accept:'cond'},{kw:'THEN',kwClass:'kw-then',key:'then',accept:'act'},{kw:'ELSE',kwClass:'kw-else',key:'else',accept:'act'}], fixedOp:'AND',
-    conds:['block','laneClear','scooter','water'], acts:['CHANGE','STOP','GO'], prefill:{c1:'block', then:'CHANGE'} });
-  setPanel(head('build','Road block rule','IF · AND · THEN · ELSE') + bB.html + `<div class="btnrow"><button class="go" id="run">${IC.replay}Run again</button></div><div id="hint"></div>`);
+  // two IF rules and no ELSE: an ELSE here would also fire on an empty road (SME review)
+  const bB = builder({ groups:[
+      [{kw:'IF',kwClass:'kw-if',key:'c1',accept:'cond'},{kw:'AND',key:'c2',accept:'cond'},{kw:'THEN',kwClass:'kw-then',key:'then',accept:'act'}],
+      [{kw:'IF',kwClass:'kw-if',key:'r2c1',role:'c1',accept:'cond'},{kw:'AND',key:'r2c2',role:'c2',accept:'cond'},{kw:'THEN',kwClass:'kw-then',key:'r2then',role:'then',accept:'act'}] ], fixedOp:'AND',
+    conds:['block','laneClear','scooter','water'], acts:['CHANGE','STOP','GO'], prefill:{c1:'block', then:'CHANGE', r2c1:'block'} });
+  setPanel(head('build','Road block rules','Two rules · IF · AND · THEN') + bB.html + `<div class="btnrow"><button class="go" id="run">${IC.replay}Run again</button></div><div id="hint"></div>`);
   bB.bind(panel); traceUI = {kind:'single', root:panel};
-  c = await rewind(c);
+  c = await rewind(c); say(L.bcB2);
   const rB = await builderLoop({c, b:bB, hints:[L.bcBh1, L.bcBh2], ctx:'B', okLine:L.bcBok});
   G.ruleB = rB.rule; saveProgress(startZ);
   await cta('Next problem');
@@ -639,12 +661,12 @@ async function BUILD_CONDITIONAL(startZ){
   return ORDER_RULES(W.Z.z);
 }
 async function listLoop(opts){
-  let first = opts.first!==false;
+  let first = opts.first!==false; G.tries = G.tries || {}; G.tries[opts.ctx] = 0;
   while(true){
     opts.list.setLocked(false); const run=$('#run'); run.disabled=false; hintsOn(opts.hints, $('#hint'));
     await clickOnce(run); SFX.tap(); hintsOff(); opts.list.setLocked(true); run.disabled=true; stopSpeech(); clearCaption();
     if(!first) opts.c = await rewind(opts.c); first=false;
-    const res = await runCourse(opts.c, opts.list.rules);
+    G.tries[opts.ctx]++; const res = await runCourse(opts.c, opts.list.rules);
     if(res.ok){ SFX.ok(); toast('ok','Rules work!'); await say(opts.okLine); hideToast(); return {c:opts.c}; }
     failToast(res); SFX.bad(); await say(failLine(res, opts.ctx)); hideToast(); hud(null); bubble(null); clearVehicles();
     run.innerHTML = `${IC.replay}Run again`;
@@ -653,9 +675,9 @@ async function listLoop(opts){
 async function ORDER_RULES(startZ){
   setState('ORDER_RULES', startZ);
   const c = course = buildCourse(['water','clear','waterTurn'], startZ, {street:1});
-  const rules = [ {c1:'turn', then:'TURN'}, {c1:'clear', then:'GO'}, {c1:'water', then:'SLOW'} ];
+  const rules = [ {c1:'turn', then:'TURN'}, {c1:'clear', then:'GO', else:'SLOW'}, {c1:'water', then:'SLOW'} ]; // correct: water, turn, then the ELSE rule last
   const list = ruleList(rules, false);
-  setPanel(head('list','Order the rules','Zippy checks from the top') + `<div class="order-note">${IC.down}First rule that fits wins</div>` + list.html + `<div class="btnrow"><button class="go" id="run">${IC.play}Run</button></div><div id="hint"></div>`);
+  setPanel(head('list','Order the rules','Zippy checks from the top') + `<div class="order-note">${IC.down}First true rule wins · a rule with ELSE always answers</div>` + list.html + `<div class="btnrow"><button class="go" id="run">${IC.play}Run</button></div><div id="hint"></div>`);
   list.bind(panel); traceUI = {kind:'list', root:panel};
   say(L.ord);
   const r = await listLoop({c, list, hints:[L.ordh1, L.ordh2], ctx:'ORD', okLine:L.ordOk});
@@ -667,8 +689,8 @@ async function ORDER_RULES(startZ){
 async function DEBUG_PRIORITY(startZ){
   setState('DEBUG_PRIORITY', startZ);
   let c = course = buildCourse(['block','water','dry'], startZ);
-  const list = ruleList([ {c1:'dry', then:'GO'}, {c1:'water', then:'SLOW'}, {c1:'block', then:'CHANGE'} ], true);
-  setPanel(head('wrench','Street rules','Something is wrong') + `<div class="order-note">${IC.down}First rule that fits wins</div>` + list.html + `<div class="btnrow"><button class="go" id="run">${IC.eye}Watch run</button></div><div id="hint"></div>`);
+  const list = ruleList([ {c1:'dry', then:'GO'}, {c1:'water', then:'SLOW'}, {c1:'block', op:'AND', c2:'laneClear', then:'CHANGE'} ], true);
+  setPanel(head('wrench','Street rules','Something is wrong') + `<div class="order-note">${IC.down}First true rule wins · a rule with ELSE always answers</div>` + list.html + `<div class="btnrow"><button class="go" id="run">${IC.eye}Watch run</button></div><div id="hint"></div>`);
   list.bind(panel); traceUI = {kind:'list', root:panel};
   say(L.dbg); await clickOnce($('#run')); SFX.tap(); $('#run').disabled=true; stopSpeech(); clearCaption();
   const res = await runCourse(c, list.rules); failToast(res); SFX.bad(); await say(L.dbgFail); hideToast(); hud(null); bubble(null);
@@ -682,39 +704,42 @@ async function DEBUG_PRIORITY(startZ){
 }
 async function BUILD_FINAL_RULE(startZ){
   setState('BUILD_FINAL_RULE', startZ);
-  const c = course = buildCourse(['water','bump','clear'], startZ);
-  const b = builder({ rows:[{kwSlot:'k1',key:'c1',accept:'cond'},{kwSlot:'k2',key:'c2',accept:'cond'},{kwSlot:'k3',key:'then',accept:'act'},{kwSlot:'k4',key:'else',accept:'act'}],
-    kws:['IF','AND','OR','THEN','ELSE'], conds:['water','bump','dry','laneClear'], acts:['SLOW','GO'] });
-  setPanel(head('build','Build it yourself','Every word has a job') + b.html + `<div class="btnrow"><button class="go" id="run">${IC.play}Run</button></div><div id="hint"></div>`);
+  const c = course = buildCourse(['water','bump','waterBump','clear'], startZ);
+  const b = builder({ rows:[{kw:'IF',kwClass:'kw-if',key:'c1',accept:'cond'},{kwSlot:'k2',key:'c2',accept:'cond'},{kw:'THEN',kwClass:'kw-then',key:'then',accept:'act'},{kw:'ELSE',kwClass:'kw-else',key:'else',accept:'act'}],
+    kws:['AND','OR'], conds:['water','bump','dry','laneClear'], acts:['SLOW','GO'] });
+  setPanel(head('build','Build it yourself','Your conditions, actions and operator') + b.html + `<div class="btnrow"><button class="go" id="run">${IC.play}Run</button></div><div id="hint"></div>`);
   b.bind(panel); traceUI = {kind:'single', root:panel};
-  const kwMap = {k1:'kw-if', k3:'kw-then', k4:'kw-else'}; for(const k in kwMap) panel.querySelector(`[data-key=${k}]`).classList.add(kwMap[k]);
   say(L.fin);
-  const r = await builderLoop({c, b, hints:[L.finh1, L.finh2], ctx:'FIN', okLine:L.finOk,
-    validate(){ const v=b.vals, bad=[]; if(v.k1!=='IF') bad.push('k1'); if(v.k2!=='AND' && v.k2!=='OR') bad.push('k2'); if(v.k3!=='THEN') bad.push('k3'); if(v.k4!=='ELSE') bad.push('k4'); return bad.length?bad:null; } });
+  const r = await builderLoop({c, b, hints:[L.finh1, L.finh2], ctx:'FIN', okLine:L.finOk});
   G.finalRule = r.rule; saveProgress(startZ);
-  await cta('Deliver the biryani');
+  await cta('Deliver now');
   await travelTo(r.c.endZ - 10);
   return FINAL_RUN(W.Z.z);
 }
+// safety rules first (the child's two road block rules), then water and turn in the order the child fixed, then the child's OR rule (with ELSE) last
+function rulebook(){
+  const tag = (r, src)=>Object.assign({}, r, {src});
+  const ok = r=>r && r.c1 && r.then;
+  let block = [].concat(G.ruleB || []).filter(r=>ok(r) && !r.else);
+  if(!block.length) block = [{c1:'block', op:'AND', c2:'laneClear', then:'CHANGE'}, {c1:'block', op:'AND', c2:'scooter', then:'STOP'}]; // screens skipped (dev menu) or an old save
+  let order = [].concat(G.order || []).filter(r=>ok(r) && !r.else && (r.c1==='water' || r.c1==='turn'));
+  if(order.length<2) order = [{c1:'water', then:'SLOW'}, {c1:'turn', then:'TURN'}];
+  const fr = ok(G.finalRule) ? G.finalRule : {c1:'water', op:'OR', c2:'bump', then:'SLOW', else:'GO'};
+  return [ ...block.map(r=>tag(r,'Build')), ...order.map(r=>tag(r,'Order')), tag({c1:fr.c1, op:fr.op, c2:fr.c2, then:fr.then, else:fr.else}, 'Create') ];
+}
 async function FINAL_RUN(startZ){
   setState('FINAL_RUN', startZ);
-  const fr = G.finalRule || {c1:'water', op:'OR', c2:'bump', then:'SLOW', else:'GO'};
-  const rules = [
-    {c1:'block', op:'AND', c2:'scooter', then:'STOP'},
-    {c1:'block', then:'CHANGE'},
-    {c1:'turn', then:'TURN'},
-    {c1:fr.c1, op:fr.op, c2:fr.c2, then:fr.then, else:fr.else}
-  ];
-  const c = course = buildCourse(['water','block','turnL','blockScooter','bump','turnR','water','clear'], startZ, {house:true, street:1});
+  const rules = rulebook();
+  const c = course = buildCourse(['water','block','turnL','blockScooter','bump','waterTurnR','water','clear'], startZ, {house:true, street:1}); // the wet turn re-tests rule order
   const list = ruleList(rules, true);
-  setPanel(head('parcel','Zippy\'s rulebook','Everything you built') + list.html + `<div class="btnrow"><button class="go" id="run">${IC.play}Start</button></div>`);
+  setPanel(head('parcel','Zippy\'s rulebook','Your rules, in your order') + list.html + `<div class="btnrow"><button class="go" id="run">${IC.play}Start</button></div>`);
   list.bind(panel); traceUI = {kind:'list', root:panel};
-  panel.querySelectorAll('.rrow .body').forEach(b=>{ b.style.fontSize='19px'; }); panel.querySelectorAll('.rrow').forEach(r=>{ r.style.padding='8px 10px'; });
+  panel.querySelector('#rlist').classList.add('compact');
   say(L.run); await clickOnce($('#run')); SFX.tap(); $('#run').disabled=true; stopSpeech(); clearCaption();
   const res = await runCourse(c, rules);
   if(!res.ok){
     failToast(res); SFX.bad(); await say(failLine(res, 'FIN')); hideToast(); hud(null); bubble(null); clearVehicles();
-    await cta('Rebuild final rule');
+    await cta('Try again');
     clearCourse(c); W.placeZippy(SNAP.BUILD_FINAL_RULE ?? startZ); W.snapCamera();
     return BUILD_FINAL_RULE(SNAP.BUILD_FINAL_RULE ?? startZ);
   }
@@ -728,25 +753,51 @@ async function FINAL_RUN(startZ){
 }
 async function COMPLETE(){
   setState('COMPLETE', W.Z.z); hidePanel(); hud(null); timer.stop();
-  const sk = [['Follows instructions','GO'],['Checks conditions','eye'],['IF · THEN · ELSE','build'],['AND needs both','check'],['Rule order matters','list'],['OR needs either','check']];
-  $('#skills').innerHTML = sk.map(([t,i])=>`<div class="sk"><i>${IC[i]}</i>${t}</div>`).join('');
-  $('#againBtn').innerHTML = `${IC.restart}Play again`;
-  $('#done').classList.remove('hide'); confetti(); FX.stagger('#done .sk', 0.5);
-  await say(L.done);
+  const sub = $('#done .sub'), again = $('#againBtn').closest('.btnrow'), box = $('#skills');
+  $('#againBtn').innerHTML = `${IC.restart}Play again`; again.hidden = true;
+  sub.textContent = 'New street: a school zone and kids crossing. Zippy must slow down if one or both are there.';
+  box.className = 'skills chk'; box.innerHTML = checkHTML(); $('#done').classList.add('checking');
+  $('#done').classList.remove('hide'); confetti(); FX.stagger('#done .chk-opt', 0.5);
+  await say(L.done); await say(L.chk);
+  const tries = await finalCheck(box); G.tries = G.tries || {}; G.tries.CHK = tries; saveProgress();
+  sub.textContent = "Your rules got Zippy past water, road blocks and turns, all the way to Mrs. Sharma's door.";
+  box.className = 'skills'; box.innerHTML = recordHTML(); $('#done').classList.remove('checking'); again.hidden = false; FX.stagger('#done .sk', 0.1);
 }
+/* last check: a new case, same idea (OR). Options differ only in the joining word or the action order, and are shuffled. */
+const CHECK = [
+  { k:'ok', op:'OR', then:'SLOW', else:'GO' },
+  { k:'and', op:'AND', then:'SLOW', else:'GO' },
+  { k:'flip', op:'OR', then:'GO', else:'SLOW' }
+];
+function checkHTML(){ const opts = CHECK.slice(); for(let i=opts.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [opts[i],opts[j]]=[opts[j],opts[i]]; }
+  return `<div class="chk-q">Which rule works?</div>` + opts.map(o=>`<button class="chk-opt" data-k="${o.k}"><span class="k">IF</span>${chipCond('school')}<span class="k">${o.op}</span>${chipCond('kids')}<span class="k">THEN</span>${chipAct(o.then)}<span class="k">ELSE</span>${chipAct(o.else)}</button>`).join('') + `<div class="chk-fb" aria-live="polite"></div>`; }
+// resolves with the number of picks; after 2 wrong picks the working rule is shown, so no child gets stuck here
+async function finalCheck(box){ let tries = 0;
+  while(true){ let pick = null; const live = [...box.querySelectorAll('.chk-opt:not([disabled])')];
+    const hs = live.map(b=>{ const h=()=>{ pick=b; }; b.addEventListener('click', h); return [b,h]; });
+    await until(()=>pick); hs.forEach(([b,h])=>b.removeEventListener('click', h)); tries++; const fb = box.querySelector('.chk-fb');
+    if(pick.dataset.k==='ok'){ pick.classList.add('right'); SFX.ok(); fb.textContent = L.chkOk; await say(L.chkOk); return tries; }
+    pick.classList.add('wrong'); pick.disabled = true; SFX.tap(); const line = pick.dataset.k==='and' ? L.chkAnd : L.chkFlip; fb.textContent = line; await say(line);
+    if(tries>=2){ const ok = box.querySelector('.chk-opt[data-k="ok"]'); ok.classList.add('right'); fb.textContent = L.chkShow; await say(L.chkShow); return tries; } } }
+// what this child actually did (entries only for stages they played in this save)
+function recordHTML(){ const t = G.tries || {}, n = k => t[k]===1 ? 'first try' : `${t[k]} tries`;
+  const guess = { safe:'slows down', go:'keeps going', back:'turns back' }[G.prediction];
+  const rows = [ guess && ['Q', `Your guess: ${guess}`], t.A && ['build', `IF · THEN · ELSE rule: ${n('A')}`], t.B && ['check', `AND rules: ${n('B')}`],
+    t.ORD && ['list', `Rule order: ${n('ORD')}`], t.DBG && ['wrench', `Bug fixed: ${n('DBG')}`], t.FIN && ['build', `OR rule: ${n('FIN')}`], t.CHK && ['check', `Last check: ${n('CHK')}`] ].filter(Boolean);
+  return `<div class="rec-h">What you did</div>` + rows.map(([i,x])=>`<div class="sk"><i>${IC[i]}</i>${x}</div>`).join(''); }
 function confetti(){ const cv=$('#confetti'), g=cv.getContext('2d'); const cols=['#ffd84a','#2FA66A','#69B9FF','#E76D5B','#2F6FED','#fff']; const ps=Array.from({length:180},()=>({x:Math.random()*1920, y:-Math.random()*800, vx:(Math.random()-.5)*3, vy:3+Math.random()*4, r:Math.random()*6, s:6+Math.random()*10, c:cols[(Math.random()*6)|0]}));
   let n=0; (function f(){ g.clearRect(0,0,1920,1080); ps.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.r+=0.1; g.save(); g.translate(p.x,p.y); g.rotate(p.r); g.fillStyle=p.c; g.fillRect(-p.s/2,-p.s/4,p.s,p.s/2); g.restore(); }); if(++n<420) requestAnimationFrame(f); else g.clearRect(0,0,1920,1080); })(); }
 
 /* ---------- activity runner (restartable) ---------- */
 let restartFn = null;
-function launch(fn, ...args){ epoch++; waiters.length = 0; restartFn = ()=>launch(fn, ...args); hintsOff(); hideToast(); bubble(null); hud(null); clearVehicles(); stopSpeech(); clearCaption();
+function launch(fn, ...args){ epoch++; waiters.length = 0; H.prev = null; restartFn = ()=>launch(fn, ...args); hintsOff(); hideToast(); bubble(null); hud(null); clearVehicles(); stopSpeech(); clearCaption();
   Promise.resolve().then(()=>fn(...args)).catch(e=>{ if(e!==CANCEL) console.error(e); }); }
 const SNAP = {};
 const acts = { PREDICTION, FIXED_ROUTE_TEST, BUILD_CONDITIONAL, ORDER_RULES, DEBUG_PRIORITY, BUILD_FINAL_RULE, FINAL_RUN };
 function restartCurrent(){ const s = state; if(s==='COMPLETE') return;
   if(s==='INTRO'){ clearCourse(course); course=null; W.placeZippy(0); W.snapCamera(); hideCta(); launch(INTRO); return; }
   const z = SNAP[s] ?? W.Z.z; clearCourse(course); course=null; W.placeZippy(z); W.snapCamera(); hideCta();
-  if(s==='PREDICTION' || s==='FIXED_ROUTE_TEST'){ W.placeZippy(0); W.snapCamera(); launch(async()=>{ course = buildCourse(['fixedDelivery'], 0, {finish:true}); return PREDICTION(); }); return; }
+  if(s==='PREDICTION' || s==='FIXED_ROUTE_TEST'){ W.placeZippy(0); W.snapCamera(); launch(async()=>{ course = buildCourse(['fixedDelivery'], 0, {finish:true}); return s==='PREDICTION' ? PREDICTION() : FIXED_ROUTE_TEST(); }); return; }
   if(acts[s]) launch(acts[s], z); }
 /* ---------- controls ---------- */
 function syncCtl(){ $('#skSound').classList.toggle('off', A.muted); $('#skMute span').innerHTML = A.muted ? 'Unmute All<br>Sounds' : 'Mute All<br>Sounds'; $('#cap').classList.toggle('muteCap', !SP.captions);
@@ -762,7 +813,7 @@ $('#skSound').onclick=()=>{ SFX.tap(); menuOpen(skMenu.classList.contains('hide'
 $('#skReplay').onclick=()=>{ SFX.tap(); menuOpen(false); replay(); }; $('#skMute').onclick=()=>{ toggleMute(); SFX.tap(); menuOpen(false); };
 $('#skInfo').onclick=()=>{ SFX.tap(); menuOpen(false); setPause(true); };
 $('#skExit').onclick=()=>{ SFX.tap(); location.reload(); }; // back to the title; progress is already saved
-$('#skHint').onclick=()=>{ if(!H.list || H.idx>=H.list.length) return; SFX.tap(); H.last = gt - 12; }; // next hint now
+$('#skHint').onclick=()=>{ if(!H.list || H.idx>=H.list.length) return; SFX.tap(); H.force = true; }; // next hint now, even over narration
 addEventListener('pointerdown', e=>{ if(!skMenu.classList.contains('hide') && !e.target.closest('#skMenu,#skSound')) menuOpen(false); }, true);
 /* mission timer: counts up from 00:00 in game time, so it stops while paused */
 const timer = { t0:null, stopped:false, start(){ this.t0=gt; this.stopped=false; }, stop(){ this.stopped=true; },
@@ -770,7 +821,13 @@ const timer = { t0:null, stopped:false, start(){ this.t0=gt; this.stopped=false;
 $('#pResume').onclick=()=>{SFX.tap(); setPause(false);}; $('#pCap').onclick=()=>toggleCap(); $('#pMute').onclick=()=>toggleMute();
 $('#pRestart').onclick=()=>{ setPause(false); restartCurrent(); };
 $('#pStory').onclick=()=>{ SFX.tap(); $('#pause').classList.add('hide'); HookVideo.play({endLabel:'Back to the game'}).then(()=>setPause(false)); };
-$('#againBtn').onclick=()=>{ $('#done').classList.add('hide'); timer.start(); W.cam.liftTarget=0; clearCourse(course); clearProgress(); W.placeZippy(0); W.snapCamera(); Object.assign(G,{prediction:null,ruleA:null,ruleB:null,order:null,debug:null,finalRule:null,_curFinal:null}); launch(async()=>{ W.cam.mode='chase'; $('#skMeter').classList.remove('hide'); course = buildCourse(['fixedDelivery'],0,{finish:true}); return PREDICTION(); }); };
+$('#againBtn').onclick=async()=>{ // start over from the very beginning: story video, then the whole mission
+  SFX.tap(); stopSpeech(); clearCaption(); hideToast(); hud(null); bubble(null); clearVehicles(); hintsOff();
+  $('#done').classList.add('hide'); $('#done').classList.remove('checking'); W.cam.liftTarget=0; clearCourse(course); course=null; clearProgress();
+  Object.assign(G,{prediction:null,ruleA:null,ruleB:null,order:null,debug:null,finalRule:null,_curFinal:null,tries:{}}); for(const k in SNAP) delete SNAP[k];
+  state='INTRO'; W.placeZippy(0); W.cam.mode='intro'; W.camera.position.set(0, 16, 40); timer.stop(); $('#skTime').textContent='00:00';
+  await HookVideo.play();
+  timer.start(); launch(INTRO); };
 addEventListener('keydown', e=>{ if(state==='TITLE' || HookVideo.open) return; const k=e.key.toLowerCase();
   if(k==='escape' && !skMenu.classList.contains('hide')){ menuOpen(false); return; }
   if(k==='escape' || k==='p'){ e.preventDefault(); setPause(!paused); } else if(paused) return; else if(k==='m') toggleMute(); else if(k==='c') toggleCap(); else if(k==='r' && !e.target.closest('.tile')) replay(); });
@@ -779,7 +836,9 @@ document.addEventListener('visibilitychange', ()=>{ if(document.hidden && state!
 /* ---------- title ---------- */
 $('#titleBg').style.backgroundImage = `url(${ASSET.titleThumbnail})`; $('#doneBot').src = ASSET.zippyImg;
 W.cam.mode = 'title'; W.placeZippy(0);
-const savedProgress = loadProgress();
+if(!RESUME_SAVED_PROGRESS) clearProgress(); // drop anything saved by an older version
+const savedProgress = RESUME_SAVED_PROGRESS ? loadProgress() : null;
+if(savedProgress && savedProgress.state!=='INTRO') $('#startBtn').lastChild.textContent = savedProgress.state==='COMPLETE' ? 'View Results' : 'Resume Mission';
 function resumeProgress(saved){
   const s = saved && saved.state;
   if(!s || s==='INTRO') return launch(INTRO);
