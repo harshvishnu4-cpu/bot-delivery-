@@ -1,45 +1,25 @@
 # Delivery Bot Academy – Zippy's Biryani Delivery
 
-Open `index.html` in Chrome, Edge or Safari. It also runs from any static web server.
+A short 3D game that teaches IF / THEN / ELSE rules: the player builds rules that help Zippy the robot deliver biryani across the city.
 
-## Folder structure
+## How to play
 
-```
-delivery-bot-academy/
-├── index.html            Page markup: title, HUD, panels, story video overlay
-├── css/
-│   └── style.css         All styles (game UI + story video player)
-├── js/
-│   ├── lib/
-│   │   ├── three.min.js  Three.js r160 – 3D road, props and camera
-│   │   └── gsap.min.js   GSAP 3.15 – UI animation (video, title, toasts, buttons)
-│   ├── textures.js       Zippy + skyline textures embedded for WebGL (works from file://)
-│   ├── world.js          3D world: road, junctions/turns, puddles, road blocks, scooter, Zippy physics
-│   ├── hook-video.js     Story video player (skip, mute, progress, end card)
-│   └── game.js           Story, narration, rules engine, the 8 stages, controls
-├── tools/
-│   └── generate_vo.py    Regenerates the narration clips with ElevenLabs
-└── assets/
-    ├── images/           zippy.webp, city.webp (title background), backdrop.webp (skyline)
-    ├── skai/             SKAI HUD artwork from Figma (SKAI-final / Robotics): buttons, timer, meter, menu, CTA plate
-    ├── fonts/            chakra-petch-700.woff2 (HUD font, bundled so it works offline)
-    ├── audio/vo/         Narration clips, one MP3 per caption box (ElevenLabs voice id IJcDvoySqim22F7eo0y8, model eleven_multilingual_v2, Indian English)
-    └── video/
-        └── hook-video.mp4  Story video shown before the mission
-```
+Open `index.html` in a web browser. Double-clicking it works; no install or server is needed.
 
-## Flow
+- **Recommended browsers:** Chrome or Edge (latest). Safari also works.
+- **Works offline:** all code, fonts, images, narration and video are in this folder. No internet connection is needed.
+- **Sound:** narration and effects start after the first click. Use the speaker button, or press **M**, to mute.
 
-1. The title screen shows **Start Mission**. Every visit starts from the beginning: pressing it plays the story video, then the mission from the intro.
-2. The story video can be skipped, or the player presses **Let's help Zippy!** at the end.
-3. The mission follows: Predict, Test, Learn, Build, Order, Debug, Create, Deliver. **Learn** is a short first-rule street where a ghost hand shows how to drag a tile into a space, then the player tries it.
-4. The pause menu has **Watch Zippy's story** to replay the video at any time, and **Restart this part** to redo the current stage.
-5. **Play again** on the results screen starts over: story video, then the whole mission. The exit button also returns to a fresh start.
+## Keyboard shortcuts
 
-## Editing tips
+| Key | Action |
+|---|---|
+| P or Esc | Pause / resume |
+| M | Mute / unmute |
+| C | Captions on / off |
+| R | Replay the last line |
+| I | Mission info |
 
-- **Video:** replace `assets/video/hook-video.mp4` and keep the same file name.
-- **Narration text:** edit the `L = { … }` object near the top of `js/game.js`. Keep each caption box to 15 words or fewer; a line written as an array plays as consecutive boxes. Each box has a matching clip in `assets/audio/vo/` named after its key (`intro1.mp3`, or `bcA_1.mp3`, `bcA_2.mp3` for arrays). **If you change a line, regenerate its clip** or the caption and the voice won't match: `ELEVENLABS_API_KEY=… python3 tools/generate_vo.py <key>` (no key argument regenerates every clip). A missing clip falls back to the browser's voice.
-- **Title/Done images:** replace the files in `assets/images/`.
-- **3D textures:** the Zippy sprite and skyline in 3D come from `js/textures.js`, which holds base64 data. They're embedded because browsers block WebGL from reading image files when the page is opened straight from disk.
-- **Saved progress:** off. Set `RESUME_SAVED_PROGRESS = true` near the top of the activities section in `js/game.js` to bring back **Resume Mission** (progress is then kept in localStorage under `delivery-bot-academy-biryani-v1`).
+## Sharing
+
+Share the whole folder (or a zip of it) and keep the folder structure as it is. The game needs the `assets`, `css` and `js` folders next to `index.html`.

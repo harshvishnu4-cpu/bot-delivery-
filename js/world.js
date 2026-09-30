@@ -234,58 +234,23 @@ const ctex = (key, w, h, draw, repeat)=>once('tex:'+key, ()=>canvasTex(w, h, dra
 
 // ---------- shared props ----------
 const M = W.M = {
-  navy:Lam({color:'#183153'}), pole:Lam({color:'#5d6978'}),
+  pole:Lam({color:'#5d6978'}),
   white:matWhite, cone:Lam({color:'#ff7a1a'}), black:Lam({color:'#1d232b'}),
   skin:Lam({color:'#9c6644'}), hair:Lam({color:'#20160f'}),
   kurta:Lam({color:'#2F6FED'}), pants:Lam({color:'#3b3f4a'}), bag:Lam({color:'#F2A93B'}),
-  cow:Lam({color:'#f2ede4'}), cowP:Lam({color:'#8a5a35'}), horn:Lam({color:'#d9c8a0'}), pink:Lam({color:'#e8a7a0'}),
   amb:Lam({color:'#fbfbf8'}), red:Lam({color:'#d9342b'}), glass:Lam({color:'#3b5877'}),
   car:Lam({color:'#69B9FF'}), wood:Lam({color:'#b98352'}), amber:Lam({color:'#F2A93B'}),
-  house:Lam({color:'#f4efe6'}), roof:Lam({color:'#E76D5B'}), green:Lam({color:'#2FA66A'}), parcel:Lam({color:'#c8955c'})
+  house:Lam({color:'#f4efe6'}), roof:Lam({color:'#E76D5B'}), green:Lam({color:'#2FA66A'})
 };
 function mesh(geo, mat, x=0,y=0,z=0, parent){ const m=new T.Mesh(geo,mat); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; if(parent) parent.add(m); return m; }
 W.mesh = mesh;
 
-W.makeZebra = (g, z)=>{ for(let i=0;i<8;i++){ const s=new T.Mesh(Gplane(0.75,3.2), matWhite); s.rotation.x=-Math.PI/2; s.position.set(-4.9+i*1.4, 0.015, z); s.receiveShadow=true; g.add(s);} const sl=new T.Mesh(Gplane(5.4,0.4), matWhite); sl.rotation.x=-Math.PI/2; sl.position.set(-2.85,0.016,z+2.9); g.add(sl); };
-W.makeSignal = (g, z)=>{
-  const s = new T.Group(); s.position.set(-6.9, 0, z+2.2); g.add(s);
-  mesh(Gcyl(0.13,0.16,5.6,10), M.pole, 0,2.8,0, s);
-  mesh(Gbox(4.6,0.16,0.16), M.pole, 2.3,5.45,0, s);
-  const head = mesh(Gbox(0.72,1.95,0.45), M.navy, 3.9,4.4,0, s);
-  const lights = {}; const cols={red:'#ff3b30', amber:'#ffb000', green:'#27d36b'};
-  ['red','amber','green'].forEach((k,i)=>{ const m=new T.Mesh(Gcirc(0.23,20), new T.MeshBasicMaterial({color:'#333'})); m.position.set(3.9, 5.02-i*0.62, 0.235); s.add(m);
-    const vis=new T.Mesh(Gbox(0.62,0.08,0.3), M.navy); vis.position.set(3.9,5.28-i*0.62,0.35); s.add(vis); lights[k]={m, on:cols[k]}; });
-  // side-mounted repeater low on pole, easy to see from chase camera
-  const rep = mesh(Gbox(0.5,1.2,0.35), M.navy, 0.28,2.6,0.1, s);
-  const small={}; ['red','green'].forEach((k,i)=>{ const m=new T.Mesh(Gcirc(0.17,16), new T.MeshBasicMaterial({color:'#333'})); m.position.set(0.28, 2.85-i*0.48, 0.28); s.add(m); small[k]=m; });
-  const halo = new T.Sprite(new T.SpriteMaterial({map:glowTex, transparent:true, blending:T.AdditiveBlending, depthWrite:false, color:'#ff5040'})); halo.scale.set(1.0,1.0,1); s.add(halo);
-  const api = { set(state){ api.state=state; for(const k in lights){ lights[k].m.material.color.set(k===state?lights[k].on:'#2a2f36'); } small.red.material.color.set(state==='red'?'#ff3b30':'#2a2f36'); small.green.material.color.set(state==='green'?'#27d36b':'#2a2f36');
-      halo.visible = !!state; if(state){ const i=['red','amber','green'].indexOf(state); halo.position.set(3.9, 5.02-i*0.62, 0.4); halo.material.color.set(state==='green'?'#40ff90':state==='amber'?'#ffc040':'#ff4030'); } } };
-  api.set('green'); return api;
-};
-W.makeCones = (g, z, x=-3)=>{ const out=new T.Group(); out.position.set(x,0,z); g.add(out);
-  [[-1.2,1.2],[0,0],[1.2,-1.2],[-1.2,-2.4]].forEach(([dx,dz])=>{ const c=new T.Group(); c.position.set(dx,0,dz); out.add(c); mesh(Gcone(0.36,1.0,14), M.cone, 0,0.55,0, c); mesh(Gcyl(0.235,0.27,0.16,14), M.white, 0,0.52,0, c); mesh(Gbox(0.85,0.08,0.85), M.cone, 0,0.04,0, c); });
-  const sign=new T.Group(); sign.position.set(0,0,-4.2); out.add(sign); mesh(Gbox(2.2,0.9,0.12), M.amber, 0,1.2,0, sign); mesh(Gbox(0.12,1.2,0.12), M.black, -0.9,0.6,0, sign); mesh(Gbox(0.12,1.2,0.12), M.black, 0.9,0.6,0, sign);
-  const stripe=new T.Mesh(Gplane(2.0,0.25), M.black); stripe.position.set(0,1.2,0.07); stripe.rotation.z=0.2; sign.add(stripe);
-  return out; };
 W.makePerson = (g, x, z, top)=>{ const p=new T.Group(); p.position.set(x,0,z); g.add(p); const tm = top ? Lam({color:top}) : M.kurta;
   const lg=mesh(Gbox(0.2,0.85,0.22), top?tm:M.pants, -0.14,0.43,0, p), rg=mesh(Gbox(0.2,0.85,0.22), top?tm:M.pants, 0.14,0.43,0, p);
   mesh(Gcyl(0.3,0.36,0.95,10), tm, 0,1.3,0, p); if(!top) mesh(Gbox(0.46,0.55,0.22), M.bag, 0,1.35,0.3, p); else { mesh(Gcyl(0.36,0.46,0.9,12), tm, 0,0.45,0, p); mesh(Gsph(0.14,10,8), M.hair, 0,2.1,-0.22, p); }
   mesh(Gsph(0.26,14,12), M.skin, 0,2.0,0, p); const hr=mesh(Gsph(0.27,14,12,0,Math.PI*2,0,Math.PI/2), M.hair, 0,2.04,0, p);
   const la=mesh(Gbox(0.14,0.7,0.16), tm, -0.4,1.35,0, p), ra=mesh(Gbox(0.14,0.7,0.16), tm, 0.4,1.35,0, p);
   p.rotation.y = Math.PI/2; p.userData={lg,rg,la,ra,phase:0}; return p; };
-W.walk = (p, dt, speed)=>{ const u=p.userData; u.phase += dt*speed*5; const a=Math.sin(u.phase)*0.55*(speed>0.05?1:0); u.lg.rotation.x=a; u.rg.rotation.x=-a; u.la.rotation.x=-a*0.8; u.ra.rotation.x=a*0.8; };
-W.makeCow = (g, x, z)=>{ const c=new T.Group(); c.position.set(x,0,z); g.add(c);
-  mesh(Gbox(2.1,1.0,1.0), M.cow, 0,1.35,0, c); mesh(Gbox(0.7,0.5,1.02), M.cowP, -0.3,1.55,0, c); mesh(Gbox(0.5,0.4,1.02), M.cowP, 0.55,1.2,0, c);
-  mesh(Gbox(0.34,0.3,0.4), M.cowP, 0.1,1.95,0, c);
-  const head=new T.Group(); head.position.set(1.25,1.75,0); c.add(head); mesh(Gbox(0.62,0.58,0.62), M.cow, 0,0,0, head); mesh(Gbox(0.3,0.3,0.5), M.pink, 0.35,-0.14,0, head);
-  mesh(Gcone(0.07,0.35,6), M.horn, 0,0.4,0.22, head); mesh(Gcone(0.07,0.35,6), M.horn, 0,0.4,-0.22, head);
-  const legs=[]; [[-0.8,0.35],[-0.8,-0.35],[0.8,0.35],[0.8,-0.35]].forEach(([lx,lz])=>legs.push(mesh(Gbox(0.22,0.9,0.22), M.cow, lx,0.45,lz, c)));
-  mesh(Gbox(0.08,0.7,0.08), M.cowP, -1.08,1.2,0, c);
-  c.userData={legs, head, phase:0}; return c; };
-W.cowWalk = (c, dt, speed)=>{ const u=c.userData; u.phase+=dt*speed*4; u.legs.forEach((l,i)=>l.rotation.z=Math.sin(u.phase+(i%2?Math.PI:0))*0.35*(speed>0.05?1:0)); u.head.rotation.z = Math.sin(u.phase*0.3)*0.08; };
-const ballTex = canvasTex(128,64,(g,w,h)=>{ g.fillStyle='#E76D5B'; g.fillRect(0,0,w,h); g.fillStyle='#ffd84a'; g.fillRect(0,22,w,20); g.fillStyle='#fff'; g.fillRect(0,28,w,8); });
-W.makeBall = (g, x, z)=>{ const b=mesh(Gsph(0.42,20,14), new T.MeshLambertMaterial({map:ballTex}), x,0.42,z, g); return b; };
 function wheel(parent,x,y,z,r=0.42){ const w=mesh(Gcyl(r,r,0.3,16), M.black, x,y,z, parent); w.rotation.z=Math.PI/2; return w; }
 const ambTex = canvasTex(256,128,(g,w,h)=>{ g.fillStyle='#fbfbf8'; g.fillRect(0,0,w,h); g.fillStyle='#d9342b'; g.fillRect(0,70,w,16); g.font='900 40px sans-serif'; g.textAlign='center'; g.fillText('108',w/2,50); g.fillRect(w/2-10,92,20,30); g.fillRect(w/2-25,100,50,14); });
 W.makeAmbulance = (g, x, z)=>{ const a=new T.Group(); a.position.set(x,0,z); g.add(a);
@@ -311,10 +276,8 @@ W.makeHouse = (g, z)=>{ const h=new T.Group(); h.position.set(-15.5,0,z); g.add(
   mesh(Gbox(1.5,2.6,0.12), M.wood, 3.51,1.3,0, h).rotation.y=Math.PI/2;
   mesh(Gbox(0.1,1.2,1.4), M.glass, 3.52,3.2,-1.8, h); mesh(Gbox(0.1,1.2,1.4), M.glass, 3.52,3.2,1.8, h);
   const pad=mesh(Gbox(2.6,0.1,2.6), M.green, 7.4,0.28,0, h); return h; };
-W.makeParcel = (g, x, y, z)=>{ const p=new T.Group(); p.position.set(x,y,z); g.add(p); mesh(Gbox(0.9,0.7,0.9), M.parcel, 0,0,0, p); mesh(Gbox(0.92,0.1,0.18), M.amb, 0,0.3,0, p); return p; };
 
 // ---------- biryani-route props ----------
-function textTex(w,h,draw){ return canvasTex(w,h,draw); }
 const stripeTex = canvasTex(256,64,(g,w,h)=>{ g.fillStyle='#ffffff'; g.fillRect(0,0,w,h); g.fillStyle='#e0392b'; for(let i=-2;i<12;i++){ g.beginPath(); g.moveTo(i*32,h); g.lineTo(i*32+32,0); g.lineTo(i*32+48,0); g.lineTo(i*32+16,h); g.fill(); } });
 const bumpTex = canvasTex(256,32,(g,w,h)=>{ g.fillStyle='#1d232b'; g.fillRect(0,0,w,h); g.fillStyle='#ffd21f'; for(let i=0;i<16;i+=2) g.fillRect(i*16,0,16,h); });
 const matStripe = new T.MeshLambertMaterial({map:stripeTex}), matBump = new T.MeshLambertMaterial({map:bumpTex});
@@ -417,7 +380,7 @@ W.setQuality = i=>{ i = Math.max(0, Math.min(QUALITY.length-1, i)); if(i===W.qua
   return true; };
 W.canLower = ()=>W.quality < QUALITY.length-1;
 // shared geometry/materials/textures are reused by every course; everything else in a course group is freed with it
-[matWhite, matYellow, matHedge, matLawn, matStripe, matBump, W.bldMat, W.asphalt, glowTex, blobTex, riderTex, ballTex, ambTex, stripeTex, bumpTex, dropGeo, ...Object.values(M)].forEach(x=>SHARED.add(x));
+[matWhite, matYellow, matHedge, matLawn, matStripe, matBump, W.bldMat, W.asphalt, glowTex, blobTex, riderTex, ambTex, stripeTex, bumpTex, dropGeo, ...Object.values(M)].forEach(x=>SHARED.add(x));
 W.disposeObject = root=>{ if(!root || root.userData.disposed) return; root.userData.disposed = true;
   root.traverse(o=>{ if(o.geometry && !o.isSprite && !SHARED.has(o.geometry)) o.geometry.dispose();
     for(const m of [].concat(o.material||[])){ if(SHARED.has(m)) continue; if(m.map && !SHARED.has(m.map)) m.map.dispose(); m.dispose(); } }); };

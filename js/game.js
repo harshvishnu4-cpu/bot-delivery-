@@ -197,8 +197,8 @@ function clickOnce(btn){ let hit=false; const h=()=>{ hit=true; }; btn.addEventL
 
 /* ---------- speech ---------- */
 const SP = { voice:null, cur:null, done:true, last:'', captions:true, token:0, gen:0, audio:null };
-// voiceover clips (ElevenLabs voice id IJcDvoySqim22F7eo0y8, model eleven_multilingual_v2, Indian English): assets/audio/vo/<key>.mp3, or <key>_<n>.mp3 for multi-box lines.
-// If you edit a line in L, regenerate its clip too (python3 tools/generate_vo.py <key>), or the caption and the voice won't match.
+// voiceover clips (ElevenLabs voice Suhana, id A2VREc2wjqtSZloENLHe, model eleven_multilingual_v2, Indian English): assets/audio/vo/<key>.mp3, or <key>_<n>.mp3 for multi-box lines.
+// If you edit a line in L, regenerate its clip too, or the caption and the voice won't match.
 const VO = new Map(); for(const [k,v] of Object.entries(L)) [].concat(v).forEach((t,i,a)=>VO.set(t, `assets/audio/vo/${a.length>1 ? k+'_'+(i+1) : k}.mp3`));
 const VOICE_EL = new Audio(); VOICE_EL.preload = 'auto';
 function stopAudio(){ const a=SP.audio; if(a){ a.onended=a.onerror=null; a.pause(); SP.audio=null; } }
@@ -846,7 +846,7 @@ function rulebook(){
   const tag = (r, src)=>Object.assign({}, r, {src});
   const ok = r=>r && r.c1 && r.then;
   let block = [].concat(G.ruleB || []).filter(r=>ok(r) && !r.else);
-  if(!block.length) block = [{c1:'block', op:'AND', c2:'laneClear', then:'CHANGE'}, {c1:'block', op:'AND', c2:'scooter', then:'STOP'}]; // screens skipped (dev menu) or an old save
+  if(!block.length) block = [{c1:'block', op:'AND', c2:'laneClear', then:'CHANGE'}, {c1:'block', op:'AND', c2:'scooter', then:'STOP'}]; // fallback if those screens were skipped or an old save is loaded
   let order = [].concat(G.order || []).filter(r=>ok(r) && !r.else && (r.c1==='water' || r.c1==='turn'));
   if(order.length<2) order = [{c1:'water', then:'SLOW'}, {c1:'turn', then:'TURN'}];
   const fr = ok(G.finalRule) ? G.finalRule : {c1:'water', op:'OR', c2:'bump', then:'SLOW', else:'GO'};
